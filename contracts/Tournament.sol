@@ -95,6 +95,8 @@ contract Tournament {
 
     * The function is fed an array of token addresses, and an array of corresponding size, with the amount expected on liquidation.
 
+    *TODO: Add guard against leaving out owned tokens from liquidation
+
     */
     function liquidate(address[] calldata tokens, uint[] calldata amountOutMin) external {
         require(msg.sender == gameMaster, "You are not the game master");
@@ -169,17 +171,20 @@ contract Tournament {
         require(msg.sender == gameMaster, "Caller not gameMaster");
         require(isLiquidated, "Game not liquidated");
         require(_sortedPlayers.length == playerCount, "Not all players accounted for");
+        require(_sortedPlayers.length == _playerTokens.length, "Input arrays not of same length");
         uint previousPlayer = type(uint256).max;
         uint totalScore = 0;
         for(uint i=0; i < _sortedPlayers.length; i++){
             require(hasTicket[_sortedPlayers[i]], "Address do not have a ticket");
             uint score = calculateScore(_sortedPlayers[i], _playerTokens[i]);
-            require(previousPlayer > score, "Player was not correctly sorted");
+            require(previousPlayer >= score, "Player was not correctly sorted");
 
             previousPlayer = score;
             totalScore += score;
         }
-        require(liquidationAmount == totalScore, "Scores don't add up"); //May need a small threshold to take into account rounding errors
+        //0.1% Threshold to account for rounding errors
+        require(liquidationAmount < totalScore*10001/10000, "Score not within threshold");
+        require(liquidationAmount > totalScore*9999/10000, "Score not within threshold");
         standing = _sortedPlayers;
         isScored = true;
         emit GameFinalized();
