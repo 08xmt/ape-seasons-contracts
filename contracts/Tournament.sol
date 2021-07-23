@@ -24,7 +24,7 @@ contract Tournament {
 
     mapping(address => uint) playerScore; //The final score of a player
 
-    mapping(address => bool) hasWithdrawn; //Boolean showing if a player has withdrawn
+    mapping(address => bool) public hasWithdrawn; //Boolean showing if a player has withdrawn
 
     mapping(address => mapping(address => uint)) public playerBalances; //Player address to token address to balance map
 
@@ -182,7 +182,7 @@ contract Tournament {
             previousPlayer = score;
             totalScore += score;
         }
-        //0.1% Threshold to account for rounding errors
+        //0.0001% Threshold to account for rounding errors
         require(liquidationAmount < totalScore*10001/10000, "Score not within threshold");
         require(liquidationAmount > totalScore*9999/10000, "Score not within threshold");
         standing = _sortedPlayers;
@@ -192,32 +192,41 @@ contract Tournament {
 
     function calculateEarnings(uint playerPosition) public view returns(uint){
         require(isLiquidated, "Game not liquidated");
-        uint indPrizeRatio = 200_000_000;
-        uint refundPrizeRatio = 500_000_000;
-        uint individualPrizeThreshold = indPrizeRatio*playerCount/DECIMALS;
-        uint refundThreshold = refundPrizeRatio*playerCount/DECIMALS; 
-        uint prizePool = liquidationAmount - liquidationAmount*APE_TAX/DECIMALS; 
-        uint individualPrizePool = prizePool*indPrizeRatio/DECIMALS;
-        uint refundPrizePool = prizePool*refundPrizeRatio/DECIMALS;
-        if(refundPrizePool < refundThreshold*ticketPrice){
-            refundThreshold = prizePool*refundPrizeRatio/DECIMALS/ticketPrice;
+        if(playerCount == 1){
+            return liquidationAmount;
         }
-        if(playerPosition >= individualPrizeThreshold){
-            return individualPrizePool/(2**playerScore[standing[playerPosition]])+refundPrizePool/refundThreshold;
-        }else if(playerPosition >= refundThreshold){
-            return refundPrizePool/refundThreshold;
+        uint prizePool = liquidationAmount - liquidationAmount*APE_TAX/DECIMALS; 
+        uint refundPool = prizePool/2;
+        uint individualPool = prizePool-refundPool;
+        uint playersToRefund = refundPool/ticketPrice;
+        if(playersToRefund == 0){
+            playersToRefund = 1;
+        }
+        uint individualWinners = playerCount/5;
+        if(individualWinners == 0){
+            individualWinners = 1;
+        }
+
+        uint refundAmount = refundPool/playersToRefund;
+
+        if(playerPosition < individualWinners){
+            return individualPool/(2**(playerPosition+1)) + refundAmount + (individualPool/(2**(individualWinners))/individualWinners);
+        }else if(playerPosition < playersToRefund){
+            return refundAmount;
         } else {
             return 0;
         }
     }
 
-    function withdrawWinnings(uint playerPos) public {
-        require(isScored, "Can't withdraw until scored");
+    function withdrawWinnings(uint playerPos) public returns(uint) {
+        require(isScored, "Tournament not scored yet");
         require(!hasWithdrawn[msg.sender], "Have already withdrawn");
         require(standing[playerPos] == msg.sender, "Incorrect standing");
         hasWithdrawn[msg.sender] = true;
-        require(ticketToken.transfer(msg.sender, this.calculateEarnings(playerPos)), "Token tx failed");
-        emit WithdrawWinnings(msg.sender);
+        uint earnings = this.calculateEarnings(playerPos);
+        require(ticketToken.transfer(msg.sender, earnings), "Token tx failed");
+        emit WithdrawWinnings(msg.sender, earnings);
+        return earnings;
     }
 
     function getBalance(address player, address token) public view returns(uint){
@@ -232,5 +241,5 @@ contract Tournament {
 
     event GameFinalized();
 
-    event WithdrawWinnings(address player);
+    event WithdrawWinnings(address player, uint winnings);
 }
