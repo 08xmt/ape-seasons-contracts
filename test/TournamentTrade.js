@@ -75,51 +75,51 @@ describe("Tournament Trade", function() {
     incrementBlocknumber(2);
     expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(ticketPrice));
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(0);
     expect((await Tournament.getBalance(playerWithTicket._address, wETHAddress)).gt(0));
   });
 
   it("Trade before game has started", async function () {
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(100));
-    await expect(Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, 100, 1)).to.be.revertedWith("Game hasn't started");
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(100));
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
+    await expect(Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1)).to.be.revertedWith("Game hasn't started");
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
   });
 
   it("Trade after game has ended", async function () {
     //Increment blocknumber 4 times to reach end block
     incrementBlocknumber(4);
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(100));
-    await expect(Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, 100, 1)).to.be.revertedWith("Game has ended");
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(100));
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
+    await expect(Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1)).to.be.revertedWith("Game has ended");
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
   });
 
   it("Trade without ticket", async function () {
     incrementBlocknumber(2);
     Dai.connect(playerWithTicket).transfer(playerWithoutTicket.address, ticketPrice);
-    expect((await Tournament.getBalance(playerWithoutTicket.address, DAIAddress)).eq(0));
-    await expect(Tournament.connect(playerWithoutTicket).trade(DAIAddress, wETHAddress, 100, 1)).to.be.revertedWith("Insufficient funds");
-    expect((await Tournament.getBalance(playerWithoutTicket.address, DAIAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithoutTicket.address, DAIAddress)).to.equal(0);
+    await expect(Tournament.connect(playerWithoutTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1)).to.be.revertedWith("Insufficient funds");
+    expect(await Tournament.getBalance(playerWithoutTicket.address, DAIAddress)).to.equal(0);
   });
 
   it("Trade more than owned", async function () {
     incrementBlocknumber(2);
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(ticketPrice));
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
     await expect(Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice+1, 1)).to.be.revertedWith("Insufficient funds");
-    expect((await Tournament.getBalance(playerWithTicket._address, DAIAddress)).eq(ticketPrice));
+    expect(await Tournament.getBalance(playerWithTicket._address, DAIAddress)).to.equal(ticketPrice);
   });
 
   it("Trade token not owned", async function () {
     incrementBlocknumber(2);
-    expect((await Tournament.getBalance(playerWithTicket._address, wETHAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithTicket._address, wETHAddress)).to.equal(0);
     await expect(Tournament.connect(playerWithTicket).trade(wETHAddress, DAIAddress, ticketPrice+1, 1)).to.be.revertedWith("Insufficient funds");
-    expect((await Tournament.getBalance(playerWithTicket._address, wETHAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithTicket._address, wETHAddress)).to.equal(0);
   });
 
   it("Trade token not owned", async function () {
     incrementBlocknumber(2);
-    expect((await Tournament.getBalance(playerWithTicket._address, wETHAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithTicket._address, wETHAddress)).to.equal(0);
     await expect(Tournament.connect(playerWithTicket).trade(wETHAddress, DAIAddress, ticketPrice+1, 1)).to.be.revertedWith("Insufficient funds");
-    expect((await Tournament.getBalance(playerWithTicket._address, wETHAddress)).eq(0));
+    expect(await Tournament.getBalance(playerWithTicket._address, wETHAddress)).to.equal(0);
   });
 
 });
