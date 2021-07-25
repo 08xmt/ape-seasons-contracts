@@ -2,7 +2,7 @@ const { expect } = require("chai");
 var fs = require('fs');
 require("@nomiclabs/hardhat-ethers");
 
-describe("Tournament buyTicket() tests", function() {
+describe("Tournament buyTicket", function() {
 
     let TournamentFactory;
     let Tournament;
@@ -13,6 +13,7 @@ describe("Tournament buyTicket() tests", function() {
     let endBlock = startBlock+1;
     let rawdata = fs.readFileSync('test/daiABI.json');
     let daiABI = JSON.parse(rawdata);
+    let ticketPrice = 100;
     let TokenWhitelist;
     const player1Address = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
     const DAIAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
@@ -48,7 +49,7 @@ describe("Tournament buyTicket() tests", function() {
         Tournament = await TournamentFactory.deploy(
             startBlock,
             endBlock,
-            100,
+            ticketPrice,
             DAIAddress,
             owner.address,
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -58,36 +59,36 @@ describe("Tournament buyTicket() tests", function() {
     });
 
   it("Correct purchase", async function () {
-    Dai.connect(player1).approve(Tournament.address, 100);
-    expect(await Tournament.hasTicket(player1._address) == false);
+    Dai.connect(player1).approve(Tournament.address, ticketPrice);
+    expect(await Tournament.hasTicket(player1._address)).to.equal(false);
     await Tournament.connect(player1).buyTicket()
-    expect(await Tournament.hasTicket(player1._address) == true);
+    expect(await Tournament.hasTicket(player1._address)).to.equal(true);
   });
 
   it("Already bought ticket", async function () {
-    Dai.connect(player1).approve(Tournament.address, 200);
-    expect(await Tournament.hasTicket(player1._address) == false);
+    Dai.connect(player1).approve(Tournament.address, 2*ticketPrice);
+    expect(await Tournament.hasTicket(player1._address)).to.equal(false);
     await Tournament.connect(player1).buyTicket();
-    expect(await Tournament.hasTicket(player1._address) == true);
+    expect(await Tournament.hasTicket(player1._address)).to.equal(true);
     await expect(Tournament.connect(player1).buyTicket()).to.be.revertedWith("Already bought ticket");
-    expect(await Tournament.hasTicket(player1._address) == true);
+    expect(await Tournament.hasTicket(player1._address)).to.equal(true);
   });
 
   it("Not enough DAI", async function () {
-    Dai.connect(player2).approve(Tournament.address, 100);
-    expect(await Tournament.hasTicket(player2.address) == false);
+    Dai.connect(player2).approve(Tournament.address, ticketPrice);
+    expect(await Tournament.hasTicket(player2.address)).to.equal(false);
     await expect( Tournament.connect(player2).buyTicket()).to.be.revertedWith("revert Dai/insufficient-balance");
-    expect(await Tournament.hasTicket(player2.address) == false);
+    expect(await Tournament.hasTicket(player2.address)).to.equal(false);
   });
 
   it("Tournament has started", async function () {
-    Dai.connect(player1).approve(Tournament.address, 100);
+    Dai.connect(player1).approve(Tournament.address, ticketPrice);
     //Increment blockchain enough for tournament to start
     ethers.provider.send("evm_mine");
     ethers.provider.send("evm_mine");
 
     await expect(Tournament.connect(player1).buyTicket()).to.be.revertedWith("Tournament has started");
-    expect(await Tournament.hasTicket(player2.address) == false);
+    expect(await Tournament.hasTicket(player2.address)).to.equal(false);
   });
 });
 
