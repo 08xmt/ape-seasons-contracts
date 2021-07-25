@@ -89,10 +89,10 @@ describe("Tournament liquidate()", function() {
     await incrementToStart(Tournament);
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     expect(await Tournament.liquidationAmount() > 0);
-    expect(Tournament.isLiquidated == true);
+    expect(await Tournament.isLiquidated()).to.equal(true);
   });
 
   it("Liquidate multiple users WETH", async function () {
@@ -102,10 +102,10 @@ describe("Tournament liquidate()", function() {
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     amountOut += await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     expect(Tournament.liquidationAmount() > 0);
-    expect(Tournament.isLiquidated == true);
+    expect(await Tournament.isLiquidated()).to.equal(true);
   });
 
   it("Liquidate multiple different tokens WETH, SUSHI", async function (){
@@ -113,41 +113,41 @@ describe("Tournament liquidate()", function() {
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice/2, 1);
     amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, SUSHIAddress, ticketPrice/2, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await Tournament.connect(owner).liquidate([wETHAddress, SUSHIAddress],[0,0]);
     expect(await Tournament.liquidationAmount() > ticketPrice/2);
-    expect(Tournament.isLiquidated == true);
+    expect(await Tournament.isLiquidated()).to.equal(true);
   });   
 
   it("Liquidate as non-gamemaster", async function () {
     await incrementToStart(Tournament);
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await expect(Tournament.connect(playerWithTicket).liquidate([wETHAddress],[0])).to.be.revertedWith("You are not the game master");
-    expect(await Tournament.liquidationAmount() == 0);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.liquidationAmount()).to.equal(0);
+    expect(await Tournament.isLiquidated()).to.equal(false);
   });
 
   it("Liquidate before game is over", async function () {
     await incrementToStart(Tournament);
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await expect(Tournament.connect(owner).liquidate([wETHAddress],[0])).to.be.revertedWith("Game is not over yet");
-    expect(await Tournament.liquidationAmount() == 0);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.liquidationAmount()).to.equal(0);
+    expect(await Tournament.isLiquidated()).to.equal(false);
   });
 
   it("Liquidate twice", async function () {
     await incrementToStart(Tournament);
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     expect(await Tournament.liquidationAmount() > 0);
-    expect(Tournament.isLiquidated == true);
+    expect(await Tournament.isLiquidated()).to.equal(true);
     await expect(Tournament.connect(owner).liquidate([wETHAddress],[0])).to.be.revertedWith("Tokens have already been liquidated");
-    expect(Tournament.isLiquidated == true);
+    expect(await Tournament.isLiquidated()).to.equal(true);
   });
 
   it("Liquidate liquidation arrays of uneven length", async function (){
@@ -155,13 +155,13 @@ describe("Tournament liquidate()", function() {
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice/2, 1);
     amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, SUSHIAddress, ticketPrice/2, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await expect(Tournament.connect(owner).liquidate([wETHAddress, SUSHIAddress],[0])).to.be.revertedWith("Liquidation arrays must have same amount of elements");
-    expect(await Tournament.liquidationAmount() == 0);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.liquidationAmount()).to.equal(0);
+    expect(await Tournament.isLiquidated()).to.equal(false);
     await expect(Tournament.connect(owner).liquidate([wETHAddress, SUSHIAddress],[0,0,0])).to.be.revertedWith("Liquidation arrays must have same amount of elements");
-    expect(await Tournament.liquidationAmount() == 0);
-    expect(Tournament.isLiquidated == false);
+    expect(await Tournament.liquidationAmount()).to.equal(0);
+    expect(await Tournament.isLiquidated()).to.equal(false);
 
   }); 
 });
