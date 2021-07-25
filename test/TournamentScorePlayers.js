@@ -91,9 +91,9 @@ describe("Tournament scorePlayers()", function() {
     let amountOut = await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address],[[wETHAddress]]);
-    expect(Tournament.isScored == true);
+    expect(await Tournament.isScored()).to.equal(true);
   });
 
   it("Score two players WETH", async function () {
@@ -103,9 +103,9 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(Tournament.isScored == true);
+    expect(await Tournament.isScored()).to.equal(true);
   });
 
   it("Score two players with WETH, SUSHI and DAI", async function () {
@@ -116,18 +116,18 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice.div(2), 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress, SUSHIAddress],[wETHAddress, DAIAddress]]);
-    expect(Tournament.isScored == true);
+    expect(await Tournament.isScored()).to.equal(true);
   });
 
   it("Game not liquidated", async function () {
     await incrementToStart(Tournament);
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await expect(Tournament.connect(owner).scorePlayers([playerWithTicket._address],[[wETHAddress]])).to.be.revertedWith("Game not liquidated");
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
   });
 
   it("Input array missing player", async function () {
@@ -137,9 +137,9 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await expect(Tournament.connect(owner).scorePlayers([playerWithTicket._address],[[wETHAddress]])).to.be.revertedWith("Not all players accounted for");
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
   });
 
   it("Input arrays not of same length", async function () {
@@ -149,9 +149,9 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[1]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await expect(Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress]])).to.be.revertedWith("Input arrays not of same length");
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
   });
 
   it("Sort two players wrong", async function () {
@@ -161,9 +161,9 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[1]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await expect(Tournament.connect(owner).scorePlayers([playerWithDai.address, playerWithTicket._address],[[wETHAddress],[wETHAddress]])).to.be.revertedWith("Player was not correctly sorted");
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
   });
 
   it("Not all token addresses added to scoring array", async function () {
@@ -174,9 +174,9 @@ describe("Tournament scorePlayers()", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice.div(2), 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress, SUSHIAddress],[1,1]);
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
     await expect(Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]])).to.be.revertedWith("Score not within threshold");
-    expect(Tournament.isScored == false);
+    expect(await Tournament.isScored()).to.equal(false);
   });
 
 });
