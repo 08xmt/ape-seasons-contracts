@@ -8,6 +8,7 @@ import "./TokenWhitelist.sol";
 contract Tournament {
     uint public immutable startBlock; //Block at which the game starts
     uint public immutable endBlock; //Block at which the game ends
+    uint public rewardAmount; //Amount of reward tokens paid out to everyone
     address public immutable wethAddress; //Address for wrapped ether. Used for sushi/uni routing.
     IERC20 public immutable ticketToken; //Token used for buying tickets. Will be Unit of Account of game
     IUniswapV2Router01 public immutable sushiRouter; //Sushi router used for making trades
@@ -21,10 +22,14 @@ contract Tournament {
     bool public isLiquidated = false; //Game has been successfully liquidated
     bool public isScored = false; //Game has been successfuly scored
     address[] public standing; //Sorted standing of player addresses
+    IERC20 public rewardToken; //Reward token used to add additional rewards to a tournament, beyond the tokens paid for tickets
+    address public rewardTokenDistributor; //Address holding reward tokens
 
     mapping(address => uint) playerScore; //The final score of a player
 
     mapping(address => bool) public hasWithdrawn; //Boolean showing if a player has withdrawn
+    
+    mapping(address => bool) public hasClaimed; //Boolean showing if a player has withdrawn
 
     mapping(address => mapping(address => uint)) public playerBalances; //Player address to token address to balance map
 
@@ -38,22 +43,28 @@ contract Tournament {
         uint _startBlock, 
         uint _endBlock, 
         uint _ticketPrice, 
+        uint _rewardAmount,
         address _ticketTokenAddress,
         address _gameMaster,
         address _wethAddress,
         address _sushiRouterAddress,
-        address _tokenWhitelist
+        address _tokenWhitelist,
+        address _rewardToken,
+        address _rewardTokenDistributor
     ){
         require(block.number < _startBlock, "Startblock lower than deployment block");
         require(_startBlock < _endBlock, "Tournament ends before it starts");
         startBlock = _startBlock;
         endBlock = _endBlock;
         ticketPrice = _ticketPrice;
+        rewardAmount = _rewardAmount;
         ticketToken = IERC20(_ticketTokenAddress);
         gameMaster = _gameMaster;
         wethAddress = _wethAddress;
         sushiRouter = IUniswapV2Router01(_sushiRouterAddress);
         tokenWhitelist = TokenWhitelist(_tokenWhitelist);
+        rewardToken = IERC20(_rewardToken);
+        rewardTokenDistributor = _rewardTokenDistributor;
         emit Deploy(_startBlock, _endBlock, ticketPrice);
     }
 
@@ -225,8 +236,18 @@ contract Tournament {
         hasWithdrawn[msg.sender] = true;
         uint earnings = this.calculateEarnings(playerPos);
         require(ticketToken.transfer(msg.sender, earnings), "Token tx failed");
+        claimRewards();
         emit WithdrawWinnings(msg.sender, earnings);
         return earnings;
+    }
+
+    function claimRewards() public returns(uint) {
+        require(isLiquidated, "Cannot claim rewards before liquidation");
+        require(!hasClaimed[msg.sender], "Have already claimed");
+        hasClaimed[msg.sender] = true;
+        require(rewardToken.transferFrom(rewardTokenDistributor, msg.sender, rewardAmount));
+        emit ClaimRewards(msg.sender, rewardAmount); 
+        return rewardAmount;
     }
 
     function getBalance(address player, address token) public view returns(uint){
@@ -242,4 +263,6 @@ contract Tournament {
     event GameFinalized();
 
     event WithdrawWinnings(address player, uint winnings);
+
+    event ClaimRewards(address player, uint rewardAmount);
 }

@@ -24,8 +24,11 @@ contract TournamentFactory {
         uint _startBlock,
         uint _endBlock,
         uint _ticketPrice,
+        uint _rewardTokenAmount,
         address _ticketToken,
         address _gameMaster,
+        address _rewardToken,
+        address _rewardTokenDistributor,
         string calldata name
     ) external returns (address){
         if(!publicCanCreate){
@@ -35,11 +38,14 @@ contract TournamentFactory {
             _startBlock,
             _endBlock,
             _ticketPrice,
+            _rewardTokenAmount,
             _ticketToken,
             _gameMaster,
             wethAddress,
             sushiRouterAddress,
-            tokenWhitelist
+            tokenWhitelist,
+            _rewardToken,
+            _rewardTokenDistributor
         );
         emit CreateTournament(_startBlock, _endBlock, _ticketPrice, _ticketToken, address(newTournament), name);
         return address(newTournament);
