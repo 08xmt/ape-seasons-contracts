@@ -30,8 +30,10 @@ describe("Tournament Withdrawinnings", function() {
     let playerWithoutDAI;
     let startBlock = 12680000;
     let ticketPrice = ethers.BigNumber.from("0x152D02C7E14AF6800000");
+    let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
     let rawdata = fs.readFileSync('test/daiABI.json');
+    let RewardToken;
     const daiABI = JSON.parse(rawdata);
     let TokenWhitelist;
     const playerWithTicketAddress = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
@@ -65,6 +67,9 @@ describe("Tournament Withdrawinnings", function() {
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
         await TokenWhitelist.addToken(SUSHIAddress);
+        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        RewardToken = await RewardTokenFactory.deploy();
+        await RewardToken.connect(owner).mint(owner.address, ticketPrice.mul(1000));
     });
 
     beforeEach(async function () {
@@ -75,15 +80,19 @@ describe("Tournament Withdrawinnings", function() {
             startBlock,
             endBlock,
             ticketPrice,
+            rewardAmount,
             DAIAddress,
             owner.address,
             wETHAddress,
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-            TokenWhitelist.address
+            TokenWhitelist.address,
+            RewardToken.address,
+            owner.address
         );
         await Dai.connect(playerWithTicket).approve(Tournament.address, ticketPrice);
         await Dai.connect(playerWithDai).approve(Tournament.address, ticketPrice);
         await Tournament.connect(playerWithTicket).buyTicket();
+        await RewardToken.connect(owner).approve(Tournament.address, ticketPrice.mul(1000));
     });
   it("Withdraw winnings one player WETH", async function () {
     await incrementToStart(Tournament);

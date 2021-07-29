@@ -8,6 +8,7 @@ describe("Tournament deployment", function() {
     let signer;
     let owner;
     let TokenWhitelist;
+    let RewardToken;
     
     beforeEach(async function () {
         await hre.network.provider.request({
@@ -18,6 +19,12 @@ describe("Tournament deployment", function() {
         [owner] = await ethers.getSigners();
         TokenWhitelistFactory = await ethers.getContractFactory("TokenWhitelist");
         TokenWhitelist = await TokenWhitelistFactory.deploy();
+        startBlock = await ethers.provider.getBlockNumber()+10;
+    });
+
+    before(async function() {
+        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        RewardToken = await RewardTokenFactory.deploy();
     });
 
   it("Deployment execute correctly", async function() {
@@ -39,11 +46,14 @@ describe("Tournament deployment", function() {
         startBlock+2, //Must be +2, as contract deployment happens in startBlock+1
         startBlock+3,
         100,
+        100,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
         "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-        TokenWhitelist.address
+        TokenWhitelist.address,
+        RewardToken.address,
+        owner.address
     );
 
     const ticketPrice = await Tournament.ticketPrice();
@@ -61,11 +71,15 @@ describe("Tournament deployment", function() {
         currentBlock,
         currentBlock+2,
         100,
+        100,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
         "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-        TokenWhitelist.address
+        TokenWhitelist.address,
+        RewardToken.address,
+        owner.address
+
     )).to.be.revertedWith("Startblock lower than deployment block");
   });
   it("Deployment fail if endBlock < startblock", async function() {
@@ -81,11 +95,15 @@ describe("Tournament deployment", function() {
         currentBlock+2,
         currentBlock+1,
         100,
+        100,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
         "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-        TokenWhitelist.address
+        TokenWhitelist.address,
+        RewardToken.address,
+        owner.address
+
     )).to.be.revertedWith("Tournament ends before it starts");
   });
 });

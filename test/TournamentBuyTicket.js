@@ -14,7 +14,9 @@ describe("Tournament buyTicket", function() {
     let rawdata = fs.readFileSync('test/daiABI.json');
     let daiABI = JSON.parse(rawdata);
     let ticketPrice = 100;
+    let rewardAmount = ticketPrice;
     let TokenWhitelist;
+    let RewardToken;
     const player1Address = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
     const DAIAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
 
@@ -41,6 +43,8 @@ describe("Tournament buyTicket", function() {
         TokenWhitelist = await TokenWhitelistFactory.deploy();
         TournamentFactory = await ethers.getContractFactory("Tournament");
         Dai = await ethers.getContractAt(daiABI, DAIAddress);
+        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        RewardToken = await RewardTokenFactory.deploy();
     });
 
     beforeEach(async function () {
@@ -50,11 +54,14 @@ describe("Tournament buyTicket", function() {
             startBlock,
             endBlock,
             ticketPrice,
+            rewardAmount,
             DAIAddress,
             owner.address,
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-            TokenWhitelist.address
+            TokenWhitelist.address,
+            RewardToken.address,
+            owner.address,
         );
     });
 

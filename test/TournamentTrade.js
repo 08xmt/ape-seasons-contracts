@@ -18,6 +18,7 @@ describe("Tournament Trade", function() {
     let playerWithoutDAI;
     let startBlock = 12680000;
     let ticketPrice = 100000;
+    let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
     let rawdata = fs.readFileSync('test/daiABI.json');
     const daiABI = JSON.parse(rawdata);
@@ -51,6 +52,8 @@ describe("Tournament Trade", function() {
         Dai = await ethers.getContractAt(daiABI, DAIAddress);
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
+        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        RewardToken = await RewardTokenFactory.deploy();
     });
 
     beforeEach(async function () {
@@ -60,11 +63,14 @@ describe("Tournament Trade", function() {
             startBlock,
             endBlock,
             ticketPrice,
+            rewardAmount,
             DAIAddress,
             owner.address,
             wETHAddress,
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-            TokenWhitelist.address
+            TokenWhitelist.address,
+            RewardToken.address,
+            owner.address
         );
         await Dai.connect(playerWithTicket).approve(Tournament.address, ticketPrice);
         await Tournament.connect(playerWithTicket).buyTicket();
