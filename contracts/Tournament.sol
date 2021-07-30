@@ -236,7 +236,9 @@ contract Tournament {
         hasWithdrawn[msg.sender] = true;
         uint earnings = this.calculateEarnings(playerPos);
         require(ticketToken.transfer(msg.sender, earnings), "Token tx failed");
-        claimRewards();
+        if(!hasClaimed[msg.sender]){
+            claimRewards();
+        }
         emit WithdrawWinnings(msg.sender, earnings);
         return earnings;
     }
