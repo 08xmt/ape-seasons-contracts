@@ -20,7 +20,7 @@ async function incrementToEnd(Tournament){
     incrementBlocknumber(endBlock-currentBlock+1);
 };
 
-describe("Tournament WithdraWinnings", function() {
+describe("Tournament claimRewards", function() {
 
     let TournamentFactory;
     let Tournament;
@@ -67,15 +67,15 @@ describe("Tournament WithdraWinnings", function() {
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
         await TokenWhitelist.addToken(SUSHIAddress);
-        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
-        RewardToken = await RewardTokenFactory.deploy();
-        await RewardToken.connect(owner).mint(owner.address, ticketPrice.mul(1000));
     });
 
     beforeEach(async function () {
         startBlock = await ethers.provider.getBlockNumber()+10;
         endBlock = startBlock+20;
         await Dai.connect(playerWithTicket).transfer(playerWithDai.address, ticketPrice);
+        let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        RewardToken = await RewardTokenFactory.deploy();
+        await RewardToken.connect(owner).mint(owner.address, ticketPrice.mul(1000));
         Tournament = await TournamentFactory.deploy(
             startBlock,
             endBlock,
@@ -94,20 +94,8 @@ describe("Tournament WithdraWinnings", function() {
         await Tournament.connect(playerWithTicket).buyTicket();
         await RewardToken.connect(owner).approve(Tournament.address, ticketPrice.mul(1000));
     });
-  it("Withdraw winnings one player WETH", async function () {
-    await incrementToStart(Tournament);
-    await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
-    await incrementToEnd(Tournament);
-    await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-    await Tournament.connect(owner).scorePlayers([playerWithTicket._address],[[wETHAddress]]);
-      
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-    await Tournament.connect(playerWithTicket).withdrawWinnings(0)
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
-  });
 
-
-  it("Withdraw winnings two players WETH", async function () {
+  it("Claim rewards winner", async function () {
     await Tournament.connect(playerWithDai).buyTicket();
     await incrementToStart(Tournament);
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
@@ -115,12 +103,14 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-    await Tournament.connect(playerWithTicket).withdrawWinnings(0);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
+    await Tournament.connect(playerWithTicket).claimRewards();
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
   });
 
-  it("Withdraw twice", async function () {
+  it("Claim before withdrawing", async function () {
     await Tournament.connect(playerWithDai).buyTicket();
     await incrementToStart(Tournament);
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
@@ -128,28 +118,17 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-      
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-    await Tournament.connect(playerWithTicket).withdrawWinnings(0);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
-    await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0)).to.revertedWith("Have already withdrawn");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
+    await Tournament.connect(playerWithTicket).claimRewards();
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
+    await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0));
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
   });
 
-  it("Withdraw without scoring", async function () {
-    await Tournament.connect(playerWithDai).buyTicket();
-    await incrementToStart(Tournament);
-    await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
-    await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
-    await incrementToEnd(Tournament);
-    await Tournament.connect(owner).liquidate([wETHAddress],[0]);
-      
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-    await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0)).to.revertedWith("Tournament not scored yet");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-  });
-
-  it("Incorrect standing", async function () {
+  it("Claim rewards loser", async function () {
     await Tournament.connect(playerWithDai).buyTicket();
     await incrementToStart(Tournament);
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
@@ -157,11 +136,40 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
-    await expect(Tournament.connect(playerWithTicket).withdrawWinnings(1)).to.revertedWith("Incorrect standing");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect(await Tournament.hasClaimed(playerWithDai.address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithDai.address)).to.equal(0);
+    await Tournament.connect(playerWithDai).claimRewards();
+    expect(await Tournament.hasClaimed(playerWithDai.address)).to.equal(true);
+    expect(await RewardToken.balanceOf(playerWithDai.address)).to.equal(rewardAmount);
   });
 
+  it("Claim before liquidation", async function () {
+    await Tournament.connect(playerWithDai).buyTicket();
+    await incrementToStart(Tournament);
+    await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
+    await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
+    await incrementToEnd(Tournament);
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
+    await (expect(Tournament.connect(playerWithTicket).claimRewards())).to.revertedWith("Cannot claim rewards before liquidation");
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
+  });
+
+  it("Claim rewards winner", async function () {
+    await Tournament.connect(playerWithDai).buyTicket();
+    await incrementToStart(Tournament);
+    await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
+    await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
+    await incrementToEnd(Tournament);
+    await Tournament.connect(owner).liquidate([wETHAddress],[0]);
+    await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
+    await Tournament.connect(playerWithTicket).claimRewards();
+    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
+    await (expect(Tournament.connect(playerWithTicket).claimRewards())).to.revertedWith("Have already claimed");
+  });
 });
 
