@@ -4,37 +4,34 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./uniswapv2/interfaces/IUniswapV2Router01.sol";
 import "./TokenWhitelist.sol";
+import "./IPrizeStructure.sol";
+import "./RewardDistributor.sol";
 
 contract Tournament {
+
+    struct playerState {
+        bool hasTicket;
+        bool hasWithdrawn;
+        bool hasClaimed;
+    }
     uint public immutable startBlock; //Block at which the game starts
     uint public immutable endBlock; //Block at which the game ends
-    uint public rewardAmount; //Amount of reward tokens paid out to everyone
     address public immutable wethAddress; //Address for wrapped ether. Used for sushi/uni routing.
     IERC20 public immutable ticketToken; //Token used for buying tickets. Will be Unit of Account of game
     IUniswapV2Router01 public immutable sushiRouter; //Sushi router used for making trades
     TokenWhitelist public immutable tokenWhitelist; //Tokens which are allowed to be traded - Used to guard against cheating.
     uint public ticketPrice; //Price of entry into the game
     uint public playerCount = 0; 
-    uint public immutable DECIMALS = 1000_000_000; // 1000_000 = 0.1%
-    uint public immutable APE_TAX = 100_000_000; // 10% protocol take
-    uint public liquidationAmount = 0; //The amount that has been successfully liquidated
+    uint liquidationAmount = 0; //The amount that has been successfully liquidated
+    uint DECIMALS = 1000_000_000; // 1000_000 = 0.1%
     address public gameMaster; //Address of the game master. Can call liquidation and scoring functions
-    bool public isLiquidated = false; //Game has been successfully liquidated
-    bool public isScored = false; //Game has been successfuly scored
     address[] public standing; //Sorted standing of player addresses
-    IERC20 public rewardToken; //Reward token used to add additional rewards to a tournament, beyond the tokens paid for tickets
-    address public rewardTokenDistributor; //Address holding reward tokens
+    IPrizeStructure public prizeStructure; //Reusable contract governing prizepool payouts
+    RewardDistributor public rewardDistributor; //Address holding reward tokens
 
-    mapping(address => uint) playerScore; //The final score of a player
-
-    mapping(address => bool) public hasWithdrawn; //Boolean showing if a player has withdrawn
-    
-    mapping(address => bool) public hasClaimed; //Boolean showing if a player has withdrawn
+    mapping(address => playerState) public playerStates; //Booleans showing if a player has bought a ticket, withdrawn or claimed
 
     mapping(address => mapping(address => uint)) public playerBalances; //Player address to token address to balance map
-
-    mapping(address => bool) public hasTicket; //Do a player has a valid ticket
-
     mapping(address => uint) public liquidationRatio; //The ratio at which a specific token was liquidated with 9 decimal accuracy
 
     mapping(address => bool) public hasBeenCounted;
@@ -43,28 +40,26 @@ contract Tournament {
         uint _startBlock, 
         uint _endBlock, 
         uint _ticketPrice, 
-        uint _rewardAmount,
         address _ticketTokenAddress,
         address _gameMaster,
         address _wethAddress,
         address _sushiRouterAddress,
         address _tokenWhitelist,
-        address _rewardToken,
-        address _rewardTokenDistributor
+        address _rewardDistributor,
+        address _prizeStructureAddress
     ){
         require(block.number < _startBlock, "Startblock lower than deployment block");
         require(_startBlock < _endBlock, "Tournament ends before it starts");
         startBlock = _startBlock;
         endBlock = _endBlock;
         ticketPrice = _ticketPrice;
-        rewardAmount = _rewardAmount;
         ticketToken = IERC20(_ticketTokenAddress);
         gameMaster = _gameMaster;
         wethAddress = _wethAddress;
         sushiRouter = IUniswapV2Router01(_sushiRouterAddress);
         tokenWhitelist = TokenWhitelist(_tokenWhitelist);
-        rewardToken = IERC20(_rewardToken);
-        rewardTokenDistributor = _rewardTokenDistributor;
+        rewardDistributor = RewardDistributor(_rewardDistributor);
+        prizeStructure = IPrizeStructure(_prizeStructureAddress);
         emit Deploy(_startBlock, _endBlock, ticketPrice);
     }
 
@@ -75,9 +70,9 @@ contract Tournament {
     */
     function buyTicket() external {
         require(block.number < startBlock, "Tournament has started");
-        require(!hasTicket[msg.sender], "Already bought ticket");
+        require(!playerStates[msg.sender].hasTicket, "Already bought ticket");
         require(ticketToken.transferFrom(msg.sender, address(this), ticketPrice), "Transfer failed");
-        hasTicket[msg.sender] = true;
+        playerStates[msg.sender].hasTicket = true;
         playerBalances[msg.sender][address(ticketToken)] = ticketPrice;
         playerCount += 1;
         emit BuyTicket(msg.sender);
@@ -112,9 +107,8 @@ contract Tournament {
     function liquidate(address[] calldata tokens, uint[] calldata amountOutMin) external {
         require(msg.sender == gameMaster, "You are not the game master");
         require(block.number > endBlock, "Game is not over yet");
-        require(!isLiquidated, "Tokens have already been liquidated");
+        require(!isLiquidated(), "Tokens have already been liquidated");
         require(tokens.length == amountOutMin.length, "Liquidation arrays must have same amount of elements");
-        isLiquidated = true;
         for(uint i = 0; i < tokens.length; i++){
             uint amountIn = IERC20(tokens[i]).balanceOf(address(this));
             uint amountOut = tradeExact(tokens[i], address(ticketToken), amountIn, amountOutMin[i]);
@@ -180,13 +174,14 @@ contract Tournament {
     */
     function scorePlayers(address[] calldata _sortedPlayers, address[][] calldata _playerTokens) public{
         require(msg.sender == gameMaster, "Caller not gameMaster");
-        require(isLiquidated, "Game not liquidated");
+        require(isLiquidated(), "Game not liquidated");
         require(_sortedPlayers.length == playerCount, "Not all players accounted for");
         require(_sortedPlayers.length == _playerTokens.length, "Input arrays not of same length");
         uint previousPlayer = type(uint256).max;
         uint totalScore = 0;
+
         for(uint i=0; i < _sortedPlayers.length; i++){
-            require(hasTicket[_sortedPlayers[i]], "Address do not have a ticket");
+            require(playerStates[_sortedPlayers[i]].hasTicket, "Address do not have a ticket");
             uint score = calculateScore(_sortedPlayers[i], _playerTokens[i]);
             require(previousPlayer >= score, "Player was not correctly sorted");
 
@@ -197,63 +192,50 @@ contract Tournament {
         require(liquidationAmount < totalScore*10001/10000, "Score not within threshold");
         require(liquidationAmount > totalScore*9999/10000, "Score not within threshold");
         standing = _sortedPlayers;
-        isScored = true;
         emit GameFinalized();
     }
 
     function calculateEarnings(uint playerPosition) public view returns(uint){
-        require(isLiquidated, "Game not liquidated");
-        if(playerCount == 1){
-            return liquidationAmount;
-        }
-        uint prizePool = liquidationAmount - liquidationAmount*APE_TAX/DECIMALS; 
-        uint refundPool = prizePool/2;
-        uint individualPool = prizePool-refundPool;
-        uint playersToRefund = refundPool/ticketPrice;
-        if(playersToRefund == 0){
-            playersToRefund = 1;
-        }
-        uint individualWinners = playerCount/5;
-        if(individualWinners == 0){
-            individualWinners = 1;
-        }
-
-        uint refundAmount = refundPool/playersToRefund;
-
-        if(playerPosition < individualWinners){
-            return individualPool/(2**(playerPosition+1)) + refundAmount + (individualPool/(2**(individualWinners))/individualWinners);
-        }else if(playerPosition < playersToRefund){
-            return refundAmount;
-        } else {
-            return 0;
-        }
+        require(isLiquidated(), "Game not liquidated");
+        return prizeStructure.calculateEarnings(ticketPrice, getPrizePool(liquidationAmount), playerCount, playerPosition);
     }
 
     function withdrawWinnings(uint playerPos) public returns(uint) {
-        require(isScored, "Tournament not scored yet");
-        require(!hasWithdrawn[msg.sender], "Have already withdrawn");
+        require(isScored(), "Tournament not scored yet");
+        require(!playerStates[msg.sender].hasWithdrawn, "Have already withdrawn");
         require(standing[playerPos] == msg.sender, "Incorrect standing");
-        hasWithdrawn[msg.sender] = true;
+        playerStates[msg.sender].hasWithdrawn = true;
         uint earnings = this.calculateEarnings(playerPos);
         require(ticketToken.transfer(msg.sender, earnings), "Token tx failed");
-        if(!hasClaimed[msg.sender]){
+        if(!playerStates[msg.sender].hasClaimed){
             claimRewards();
         }
         emit WithdrawWinnings(msg.sender, earnings);
         return earnings;
     }
 
-    function claimRewards() public returns(uint) {
-        require(isLiquidated, "Cannot claim rewards before liquidation");
-        require(!hasClaimed[msg.sender], "Have already claimed");
-        hasClaimed[msg.sender] = true;
-        require(rewardToken.transferFrom(rewardTokenDistributor, msg.sender, rewardAmount));
-        emit ClaimRewards(msg.sender, rewardAmount); 
-        return rewardAmount;
+    function claimRewards() public {
+        require(isLiquidated(), "Cannot claim rewards before liquidation");
+        require(!playerStates[msg.sender].hasClaimed, "Have already claimed");
+        playerStates[msg.sender].hasClaimed = true;
+        require(rewardDistributor.claim(msg.sender));
+        emit ClaimRewards(msg.sender, rewardDistributor.getRewardToken(), rewardDistributor.getRewardAmount()); 
     }
 
     function getBalance(address player, address token) public view returns(uint){
         return playerBalances[player][token];
+    }
+
+    function getPrizePool(uint _liquidationAmount) public view returns(uint){
+        return _liquidationAmount - _liquidationAmount/10; //Protocol takes 10%
+    }
+
+    function isScored() public view returns(bool){
+        return standing.length > 0;
+    }
+
+    function isLiquidated() public view returns(bool){
+        return liquidationAmount > 0;
     }
 
     event Deploy(uint startBlock, uint endBlock, uint ticketPrice);
@@ -266,5 +248,5 @@ contract Tournament {
 
     event WithdrawWinnings(address player, uint winnings);
 
-    event ClaimRewards(address player, uint rewardAmount);
+    event ClaimRewards(address player, address token, uint rewardAmount);
 }
