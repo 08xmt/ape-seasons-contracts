@@ -36,6 +36,8 @@ describe("Tournament WithdraWinnings", function() {
     let RewardToken;
     const daiABI = JSON.parse(rawdata);
     let TokenWhitelist;
+    let RewardDistributor;
+    let PrizeStructure;
     const playerWithTicketAddress = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
     const DAIAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
     const wETHAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -67,9 +69,13 @@ describe("Tournament WithdraWinnings", function() {
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
         await TokenWhitelist.addToken(SUSHIAddress);
+        let RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor");
         let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        let PrizeStructureFactory = await ethers.getContractFactory("RefundPrizeStructure");
         RewardToken = await RewardTokenFactory.deploy();
-        await RewardToken.connect(owner).mint(owner.address, ticketPrice.mul(1000));
+        PrizeStructure = await PrizeStructureFactory.deploy(2, 5);
+        RewardDistributor = await RewardDistributorFactory.deploy();
+        RewardToken.connect(owner).mint(RewardDistributor.address, rewardAmount.mul(1000));
     });
 
     beforeEach(async function () {
@@ -80,19 +86,18 @@ describe("Tournament WithdraWinnings", function() {
             startBlock,
             endBlock,
             ticketPrice,
-            rewardAmount,
             DAIAddress,
             owner.address,
             wETHAddress,
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
             TokenWhitelist.address,
-            RewardToken.address,
-            owner.address
+            RewardDistributor.address,
+            PrizeStructure.address
         );
         await Dai.connect(playerWithTicket).approve(Tournament.address, ticketPrice);
         await Dai.connect(playerWithDai).approve(Tournament.address, ticketPrice);
         await Tournament.connect(playerWithTicket).buyTicket();
-        await RewardToken.connect(owner).approve(Tournament.address, ticketPrice.mul(1000));
+        await RewardDistributor.addTournament(Tournament.address, RewardToken.address, rewardAmount);
     });
   it("Withdraw winnings one player WETH", async function () {
     await incrementToStart(Tournament);
@@ -100,10 +105,9 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address],[[wETHAddress]]);
-      
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
     await Tournament.connect(playerWithTicket).withdrawWinnings(0)
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(true);
   });
 
 
@@ -115,9 +119,9 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
     await Tournament.connect(playerWithTicket).withdrawWinnings(0);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(true);
   });
 
   it("Withdraw twice", async function () {
@@ -129,11 +133,11 @@ describe("Tournament WithdraWinnings", function() {
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
       
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
     await Tournament.connect(playerWithTicket).withdrawWinnings(0);
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(true);
     await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0)).to.revertedWith("Have already withdrawn");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(true);
   });
 
   it("Withdraw without scoring", async function () {
@@ -144,9 +148,9 @@ describe("Tournament WithdraWinnings", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
       
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
     await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0)).to.revertedWith("Tournament not scored yet");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
   });
 
   it("Incorrect standing", async function () {
@@ -158,9 +162,9 @@ describe("Tournament WithdraWinnings", function() {
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
 
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
     await expect(Tournament.connect(playerWithTicket).withdrawWinnings(1)).to.revertedWith("Incorrect standing");
-    expect(await Tournament.hasWithdrawn(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
   });
 
 });

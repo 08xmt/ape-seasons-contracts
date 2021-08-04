@@ -22,7 +22,7 @@ contract Tournament {
     TokenWhitelist public immutable tokenWhitelist; //Tokens which are allowed to be traded - Used to guard against cheating.
     uint public ticketPrice; //Price of entry into the game
     uint public playerCount = 0; 
-    uint liquidationAmount = 0; //The amount that has been successfully liquidated
+    uint public liquidationAmount = 0; //The amount that has been successfully liquidated
     uint DECIMALS = 1000_000_000; // 1000_000 = 0.1%
     address public gameMaster; //Address of the game master. Can call liquidation and scoring functions
     address[] public standing; //Sorted standing of player addresses

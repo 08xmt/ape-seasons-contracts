@@ -36,6 +36,8 @@ describe("Tournament claimRewards", function() {
     let RewardToken;
     const daiABI = JSON.parse(rawdata);
     let TokenWhitelist;
+    let RewardDistributor;
+    let PrizeStructure;
     const playerWithTicketAddress = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
     const DAIAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
     const wETHAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -67,32 +69,36 @@ describe("Tournament claimRewards", function() {
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
         await TokenWhitelist.addToken(SUSHIAddress);
+        let PrizeStructureFactory = await ethers.getContractFactory("RefundPrizeStructure");
+        PrizeStructure = await PrizeStructureFactory.deploy(2, 5);
     });
 
     beforeEach(async function () {
-        startBlock = await ethers.provider.getBlockNumber()+10;
-        endBlock = startBlock+20;
+        startBlock = await ethers.provider.getBlockNumber()+15;
+        endBlock = startBlock+30;
         await Dai.connect(playerWithTicket).transfer(playerWithDai.address, ticketPrice);
         let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        let RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor");
         RewardToken = await RewardTokenFactory.deploy();
-        await RewardToken.connect(owner).mint(owner.address, ticketPrice.mul(1000));
+        RewardDistributor = await RewardDistributorFactory.deploy();
+        await RewardToken.connect(owner).mint(RewardDistributor.address, rewardAmount.mul(1000));
         Tournament = await TournamentFactory.deploy(
             startBlock,
             endBlock,
             ticketPrice,
-            rewardAmount,
             DAIAddress,
             owner.address,
             wETHAddress,
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
             TokenWhitelist.address,
-            RewardToken.address,
-            owner.address
+            RewardDistributor.address,
+            PrizeStructure.address
         );
+        //await RewardToken.connect(owner).mint(Tournament.address, ticketPrice.mul(1000));
         await Dai.connect(playerWithTicket).approve(Tournament.address, ticketPrice);
         await Dai.connect(playerWithDai).approve(Tournament.address, ticketPrice);
         await Tournament.connect(playerWithTicket).buyTicket();
-        await RewardToken.connect(owner).approve(Tournament.address, ticketPrice.mul(1000));
+        await RewardDistributor.addTournament(Tournament.address, RewardToken.address, rewardAmount);
     });
 
   it("Claim rewards winner", async function () {
@@ -103,10 +109,10 @@ describe("Tournament claimRewards", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
     await Tournament.connect(playerWithTicket).claimRewards();
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(true);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
   });
 
@@ -118,13 +124,13 @@ describe("Tournament claimRewards", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
     await Tournament.connect(playerWithTicket).claimRewards();
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(true);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
     await expect(Tournament.connect(playerWithTicket).withdrawWinnings(0));
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(true);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
   });
 
@@ -136,10 +142,10 @@ describe("Tournament claimRewards", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasClaimed(playerWithDai.address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithDai.address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithDai.address)).to.equal(0);
     await Tournament.connect(playerWithDai).claimRewards();
-    expect(await Tournament.hasClaimed(playerWithDai.address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithDai.address))["hasClaimed"]).to.equal(true);
     expect(await RewardToken.balanceOf(playerWithDai.address)).to.equal(rewardAmount);
   });
 
@@ -149,10 +155,10 @@ describe("Tournament claimRewards", function() {
     await Tournament.connect(playerWithTicket).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
     await (expect(Tournament.connect(playerWithTicket).claimRewards())).to.revertedWith("Cannot claim rewards before liquidation");
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
   });
 
@@ -164,10 +170,10 @@ describe("Tournament claimRewards", function() {
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(false);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(false);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(0);
     await Tournament.connect(playerWithTicket).claimRewards();
-    expect(await Tournament.hasClaimed(playerWithTicket._address)).to.equal(true);
+    expect((await Tournament.playerStates(playerWithTicket._address))["hasClaimed"]).to.equal(true);
     expect(await RewardToken.balanceOf(playerWithTicket._address)).to.equal(rewardAmount);
     await (expect(Tournament.connect(playerWithTicket).claimRewards())).to.revertedWith("Have already claimed");
   });

@@ -23,6 +23,9 @@ describe("Tournament Trade", function() {
     let rawdata = fs.readFileSync('test/daiABI.json');
     const daiABI = JSON.parse(rawdata);
     let TokenWhitelist;
+    let RewardDistributor;
+    let RewardToken;
+    let PrizeStructure;
     const playerWithTicketAddress = "0xF977814e90dA44bFA03b6295A0616a897441aceC"; //Binance address
     const DAIAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
     const wETHAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -52,8 +55,13 @@ describe("Tournament Trade", function() {
         Dai = await ethers.getContractAt(daiABI, DAIAddress);
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
+        let RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor");
         let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
+        let PrizeStructureFactory = await ethers.getContractFactory("RefundPrizeStructure");
         RewardToken = await RewardTokenFactory.deploy();
+        PrizeStructure = await PrizeStructureFactory.deploy(2, 5);
+        RewardDistributor = await RewardDistributorFactory.deploy();
+        RewardToken.connect(owner).mint(RewardDistributor.address, rewardAmount*1000);
     });
 
     beforeEach(async function () {
@@ -63,16 +71,17 @@ describe("Tournament Trade", function() {
             startBlock,
             endBlock,
             ticketPrice,
-            rewardAmount,
             DAIAddress,
             owner.address,
             wETHAddress,
             "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
             TokenWhitelist.address,
-            RewardToken.address,
-            owner.address
+            RewardDistributor.address,
+            PrizeStructure.address
+
         );
         await Dai.connect(playerWithTicket).approve(Tournament.address, ticketPrice);
+        await RewardDistributor.connect(owner).addTournament(Tournament.address, RewardToken.address, rewardAmount)
         await Tournament.connect(playerWithTicket).buyTicket();
     });
 
