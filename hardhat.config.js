@@ -17,6 +17,7 @@ const GOERLI_PRIVATE_KEY = keys["goerli_private_key"];
 
 networks: {
   hardhat: {
+
     forking: {
       url: "https://eth-mainnet.alchemyapi.io/v2/" + ALCHEMY_API_KEY
     }
@@ -44,6 +45,14 @@ module.exports = {
   networks: {
     goerli: {
       url: "https://eth-goerli.alchemyapi.io/v2/" + ALCHEMY_API_KEY,
+      accounts: [GOERLI_PRIVATE_KEY]
+    },
+    mumbai: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      accounts: [GOERLI_PRIVATE_KEY]
+    },
+    matic: {
+      url: "https://rpc-mainnet.maticvigil.com",
       accounts: [GOERLI_PRIVATE_KEY]
     }
   }

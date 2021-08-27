@@ -9,9 +9,9 @@ async function main() {
   
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const wETHAddress = "0x0bb7509324ce409f7bbc4b701f932eaca9736ab7";
-  const sushiRouterAddress = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F";
-  const DAIAddress = "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60";
+  const wETHAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
+  const sushiRouterAddress = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506";
+  const DAIAddress = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063";
     
 
   const WhiteListFactory = await ethers.getContractFactory("TokenWhitelist")
@@ -29,24 +29,7 @@ async function main() {
         sushiRouterAddress,
         Whitelist.address
   );
-  const currentBlock = await ethers.provider.getBlockNumber();
-  const TournamentDeployTx = await TournamentFactory.connect(deployer).createTournament(
-    currentBlock+480,
-    currentBlock+3600/15*24*7,
-    100_000_000,
-    DAIAddress,
-    deployer.address,
-    RewardDistributor.address,
-    RefundPrizeStructure.address,
-    "Test1"
-  );
-  const DeployTxReceipt = await ethers.provider.getTransactionReceipt(TournamentDeployTx.hash);
-
   console.log("TournamentFactory address:", TournamentFactory.address);
-  console.log("Tx Receipt:", TournamentDeployTx);
-  console.log(ethers.getContract("TournamentFactory"));
-  const iface = new ethers.utils.Interface(TournamentFactory.abi);
-  console.log("Tournament address:", iface.decodeEventLog("CreateTournament", DeployTxReceipt.logs[0].data));
 }
 
 main()
