@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-var fs = require('fs');
 require("@nomiclabs/hardhat-ethers");
 
 describe("Tournament buyTicket", function() {
@@ -11,8 +10,6 @@ describe("Tournament buyTicket", function() {
     let player2;
     let startBlock = 12680000;
     let endBlock = startBlock+1;
-    let rawdata = fs.readFileSync('test/daiABI.json');
-    let daiABI = JSON.parse(rawdata);
     let ticketPrice = 100;
     let rewardAmount = ticketPrice;
     let TokenWhitelist;
@@ -44,7 +41,7 @@ describe("Tournament buyTicket", function() {
         TokenWhitelistFactory = await ethers.getContractFactory("TokenWhitelist");
         TokenWhitelist = await TokenWhitelistFactory.deploy();
         TournamentFactory = await ethers.getContractFactory("Tournament");
-        Dai = await ethers.getContractAt(daiABI, DAIAddress);
+        Dai = await ethers.getContractAt("IERC20", DAIAddress);
         let RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor");
         let RewardTokenFactory = await ethers.getContractFactory("BananaToken");
         let PrizeStructureFactory = await ethers.getContractFactory("RefundPrizeStructure");
@@ -90,7 +87,7 @@ describe("Tournament buyTicket", function() {
   it("Not enough DAI", async function () {
     Dai.connect(player2).approve(Tournament.address, ticketPrice);
     expect((await Tournament.playerStates(player2.address))["hasTicket"]).to.equal(false);
-    await expect( Tournament.connect(player2).buyTicket()).to.be.revertedWith("revert Dai/insufficient-balance");
+    await expect( Tournament.connect(player2).buyTicket()).to.be.revertedWith("Dai/insufficient-balance");
     expect((await Tournament.playerStates(player2.address))["hasTicket"]).to.equal(false);
   });
 

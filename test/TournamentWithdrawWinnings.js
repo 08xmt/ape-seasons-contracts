@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-var fs = require('fs');
 require("@nomiclabs/hardhat-ethers");
 
 function incrementBlocknumber(increment){
@@ -32,9 +31,7 @@ describe("Tournament WithdraWinnings", function() {
     let ticketPrice = ethers.BigNumber.from("0x152D02C7E14AF6800000");
     let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
-    let rawdata = fs.readFileSync('test/daiABI.json');
     let RewardToken;
-    const daiABI = JSON.parse(rawdata);
     let TokenWhitelist;
     let RewardDistributor;
     let PrizeStructure;
@@ -65,7 +62,7 @@ describe("Tournament WithdraWinnings", function() {
         playerWithTicket = await ethers.provider.getSigner(playerWithTicketAddress);
         [owner,playerWithDai,playerWithoutTicket] = await ethers.getSigners();
         TournamentFactory = await ethers.getContractFactory("Tournament");
-        Dai = await ethers.getContractAt(daiABI, DAIAddress);
+        Dai = await ethers.getContractAt("IERC20", DAIAddress);
         await TokenWhitelist.addToken(DAIAddress);
         await TokenWhitelist.addToken(wETHAddress);
         await TokenWhitelist.addToken(SUSHIAddress);
