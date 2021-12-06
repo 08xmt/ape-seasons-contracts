@@ -9,6 +9,7 @@ describe("Tournament deployment", function() {
     let owner;
     let TokenWhitelist;
     let ticketPrice = 100000;
+    let apeFee = 100_000_000; //10%	
     let rewardAmount = ticketPrice;
     let RewardDistributor;
     let RewardToken;
@@ -57,6 +58,7 @@ describe("Tournament deployment", function() {
         startBlock+2, //Must be +2, as contract deployment happens in startBlock+1
         startBlock+3,
         ticketPrice,
+	apeFee,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -77,6 +79,7 @@ describe("Tournament deployment", function() {
         currentBlock,
         currentBlock+2,
         ticketPrice,
+        apeFee,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -100,6 +103,7 @@ describe("Tournament deployment", function() {
         currentBlock+2,
         currentBlock+1,
         ticketPrice,
+	apeFee,
         "0x6b175474e89094c44da98b954eedeac495271d0f",
         owner.address,
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",

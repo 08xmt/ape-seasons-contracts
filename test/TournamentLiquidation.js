@@ -29,6 +29,7 @@ describe("Tournament liquidate()", function() {
     let playerWithoutDAI;
     let startBlock = 12680000;
     let ticketPrice = 100000;
+    let apeFee = 100_000_000; //10%	
     let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
     let TokenWhitelist;
@@ -83,6 +84,7 @@ describe("Tournament liquidate()", function() {
             startBlock,
             endBlock,
             ticketPrice,
+	    apeFee,
             DAIAddress,
             owner.address,
             wETHAddress,

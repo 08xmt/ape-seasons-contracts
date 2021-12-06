@@ -11,6 +11,7 @@ describe("Tournament buyTicket", function() {
     let startBlock = 12680000;
     let endBlock = startBlock+1;
     let ticketPrice = 100;
+    let apeFee = 100_000_000; //10%	
     let rewardAmount = ticketPrice;
     let TokenWhitelist;
     let RewardDistributor;
@@ -58,6 +59,7 @@ describe("Tournament buyTicket", function() {
             startBlock,
             endBlock,
             ticketPrice,
+            apeFee,
             DAIAddress,
             owner.address,
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",

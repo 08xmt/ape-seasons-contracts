@@ -17,6 +17,7 @@ describe("Tournament Trade", function() {
     let playerWithoutDAI;
     let startBlock = 12680000;
     let ticketPrice = 100000;
+    let apeFee = 100_000_000; //10%	
     let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
     let TokenWhitelist;
@@ -68,6 +69,7 @@ describe("Tournament Trade", function() {
             startBlock,
             endBlock,
             ticketPrice,
+	    apeFee,
             DAIAddress,
             owner.address,
             wETHAddress,

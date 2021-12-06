@@ -30,6 +30,7 @@ describe("Tournament claimRewards", function() {
     let startBlock = 12680000;
     let ticketPrice = ethers.BigNumber.from("0x152D02C7E14AF6800000");
     let rewardAmount = ticketPrice;
+    let apeFee = 100_000_000; //10%	
     let endBlock = startBlock+1;
     let RewardToken;
     let TokenWhitelist;
@@ -83,6 +84,7 @@ describe("Tournament claimRewards", function() {
             startBlock,
             endBlock,
             ticketPrice,
+	    apeFee,
             DAIAddress,
             owner.address,
             wETHAddress,

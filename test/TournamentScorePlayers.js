@@ -29,6 +29,7 @@ describe("Tournament scorePlayers()", function() {
     let playerWithoutDAI;
     let startBlock = 12680000;
     let ticketPrice = ethers.BigNumber.from("0x152D02C7E14AF6800000");
+    let apeFee = 100_000_000; //10%	
     let rewardAmount = ticketPrice;
     let endBlock = startBlock+1;
     let rewardToken;
@@ -83,6 +84,7 @@ describe("Tournament scorePlayers()", function() {
             startBlock,
             endBlock,
             ticketPrice,
+	    apeFee,
             DAIAddress,
             owner.address,
             wETHAddress,
