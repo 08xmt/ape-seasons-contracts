@@ -16,7 +16,8 @@ contract Tournament {
     }
     uint public immutable startBlock; //Block at which the game starts
     uint public immutable endBlock; //Block at which the game ends
-    address public immutable wethAddress; //Address for wrapped ether. Used for sushi/uni routing.
+    uint public immutable apeFee;
+    address public immutable tradeTokenAddress; //Address for wrapped ether. Used for sushi/uni routing.
     IERC20 public immutable ticketToken; //Token used for buying tickets. Will be Unit of Account of game
     IUniswapV2Router01 public immutable sushiRouter; //Sushi router used for making trades
     TokenWhitelist public immutable tokenWhitelist; //Tokens which are allowed to be traded - Used to guard against cheating.
@@ -40,9 +41,10 @@ contract Tournament {
         uint _startBlock, 
         uint _endBlock, 
         uint _ticketPrice, 
+	uint _apeFee,
         address _ticketTokenAddress,
         address _gameMaster,
-        address _wethAddress,
+        address _tradeTokenAddress,
         address _sushiRouterAddress,
         address _tokenWhitelist,
         address _rewardDistributor,
@@ -53,9 +55,10 @@ contract Tournament {
         startBlock = _startBlock;
         endBlock = _endBlock;
         ticketPrice = _ticketPrice;
+	apeFee = _apeFee;
         ticketToken = IERC20(_ticketTokenAddress);
         gameMaster = _gameMaster;
-        wethAddress = _wethAddress;
+        tradeTokenAddress = _tradeTokenAddress;
         sushiRouter = IUniswapV2Router01(_sushiRouterAddress);
         tokenWhitelist = TokenWhitelist(_tokenWhitelist);
         rewardDistributor = RewardDistributor(_rewardDistributor);
@@ -129,14 +132,14 @@ contract Tournament {
     */
     function tradeExact(address tokenIn, address tokenOut, uint amountIn, uint amountOutMin) internal returns (uint){
         address[] memory path;
-        if(tokenIn == wethAddress || tokenOut == wethAddress){ //If trading for weth, can use simple route.
+        if(tokenIn == tradeTokenAddress || tokenOut == tradeTokenAddress){ //If trading for tradeToken, can use simple route.
             path = new address[](2);
             path[0] = tokenIn;
             path[1] = tokenOut;
         } else {
-            path = new address[](3); // Else step from 'tokenIn' => weth => 'tokenOut'
+            path = new address[](3); // Else step from 'tokenIn' => tradeToken => 'tokenOut'
             path[0] = tokenIn;
-            path[1] = wethAddress;
+            path[1] = tradeTokenAddress;
             path[2] = tokenOut;
         }
         IERC20(tokenIn).approve(address(sushiRouter), amountIn);
@@ -227,7 +230,7 @@ contract Tournament {
     }
 
     function getPrizePool(uint _liquidationAmount) public view returns(uint){
-        return _liquidationAmount - _liquidationAmount/10; //Protocol takes 10%
+        return (_liquidationAmount - _liquidationAmount)*DECIMALS/apeFee;
     }
 
     function isScored() public view returns(bool){

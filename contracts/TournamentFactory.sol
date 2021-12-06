@@ -7,14 +7,12 @@ import "./Tournament.sol";
 contract TournamentFactory {
     
     address public owner;
-    address public wethAddress;
     address public sushiRouterAddress;
     address public tokenWhitelist;
     bool public publicCanCreate;
 
-    constructor(address _wethAddress, address _sushiRouterAddress, address _tokenWhitelist){
+    constructor(address _tradeTokenAddress, address _sushiRouterAddress, address _tokenWhitelist){
         owner = msg.sender;
-        wethAddress = _wethAddress;
         sushiRouterAddress = _sushiRouterAddress;
         tokenWhitelist = _tokenWhitelist;
         publicCanCreate = false;
@@ -24,8 +22,10 @@ contract TournamentFactory {
         uint _startBlock,
         uint _endBlock,
         uint _ticketPrice,
+	uint _apeFee,
         address _ticketToken,
         address _gameMaster,
+	address _tradeTokenAddress,
         address _rewardTokenDistributor,
         address _prizeStructure,
         string calldata name
@@ -37,26 +37,22 @@ contract TournamentFactory {
             _startBlock,
             _endBlock,
             _ticketPrice,
+	    _apeFee,
             _ticketToken,
             _gameMaster,
-            wethAddress,
+            _tradeTokenAddress,
             sushiRouterAddress,
             tokenWhitelist,
             _rewardTokenDistributor,
             _prizeStructure
         );
-        emit CreateTournament(_startBlock, _endBlock, _ticketPrice, _ticketToken, address(newTournament), name);
+        emit CreateTournament(_startBlock, _endBlock, _ticketPrice, _ticketToken, _tradeTokenAddress, address(newTournament), name);
         return address(newTournament);
     }
 
     function changeOwner(address newOwner) external{
         require(msg.sender == owner);
         owner = newOwner;
-    }
-
-    function changeWethAddress(address newWethAddress) external{
-        require(msg.sender == owner);
-        wethAddress = newWethAddress;
     }
 
     function changeSushiRouterAddress(address newSushiRouterAddress) external{
@@ -69,6 +65,6 @@ contract TournamentFactory {
         publicCanCreate = newPublicCanCreate;
     }
     
-    event CreateTournament(uint _startBlock, uint _endBlock, uint _ticketPrice, address _ticketToken, address tournamentAddress, string name);
+    event CreateTournament(uint _startBlock, uint _endBlock, uint _ticketPrice, address _ticketToken, address _tradeToken, address tournamentAddress, string name);
 
 }
