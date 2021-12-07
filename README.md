@@ -15,15 +15,9 @@ Tournament v0.0.1t1 address:	0xd6910754c418e08b1b2fb7e3b077f9fcf492f7f2
 **Whitelisted tokens**
 
 Weth: 	0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619  
-
-Dai: 	0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063  
-
+Dai: 	  0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063  
 Matic:	0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270  
-
 Wbtc:  	0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6  
-
 Link: 	0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39  
-
-Aave:	0xd6df932a45c0f255f85145f286ea0b292b21c90b  
-
+Aave:	  0xd6df932a45c0f255f85145f286ea0b292b21c90b  
 Curve:	0x172370d5cd63279efa6d502dab29171933a610af  
