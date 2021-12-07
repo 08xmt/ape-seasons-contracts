@@ -11,7 +11,7 @@ contract TournamentFactory {
     address public tokenWhitelist;
     bool public publicCanCreate;
 
-    constructor(address _tradeTokenAddress, address _sushiRouterAddress, address _tokenWhitelist){
+    constructor(address _sushiRouterAddress, address _tokenWhitelist){
         owner = msg.sender;
         sushiRouterAddress = _sushiRouterAddress;
         tokenWhitelist = _tokenWhitelist;
