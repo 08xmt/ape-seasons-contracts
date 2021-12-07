@@ -25,7 +25,7 @@ async function main() {
   console.log("Refund Prize Structure address:", RefundPrizeStructure.address)
   const TournamentFactoryFactory = await ethers.getContractFactory("TournamentFactory");
   const TournamentFactory = await TournamentFactoryFactory.deploy(
-        wETHAddress,
+        //wETHAddress,
         sushiRouterAddress,
         Whitelist.address
   );
