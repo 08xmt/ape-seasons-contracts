@@ -14,21 +14,26 @@ async function main() {
   const WhitelistAddress = "0xED056bE2b65455Fe27a2B228DdcCBce3BCcD4597"
   const RewardDistributorAddress = "0xc473337DEDeC604e399EF7e200232C41a6400d80"
   const PrizeStructureAddress = "0xaF69D4fE7ba02C3FeDdDF0fd5d5D5a561Ada64b3"
-  const FactoryAddress = "0x210c7cb41ad3366f06C7Fc40CdFaeB0C18e6Cb38"
+  const FactoryAddress = "0x026e8caB7C421d755617167791C115521bFdD500"
   const TournamentFactoryFactory = await ethers.getContractFactory("TournamentFactory");
   const TournamentFactory = await TournamentFactoryFactory.attach(FactoryAddress);
   const currentBlock = await ethers.provider.getBlockNumber();
+  const startBlock = currentBlock + Math.floor(60*60*2*10/21) //Start tournament in two hours
+  const endBlock = currentBlock + Math.floor(60*60*24*1*10/21) //End tournament in 1 days
+  console.log("Calculating start and end block")
+	console.log("start block", startBlock)
+	console.log("end block", endBlock)
   const TournamentDeployTx = await TournamentFactory.connect(deployer).createTournament(
-    currentBlock+4320,
-    currentBlock+3600*24*7/15,
-    100_000_000,
+    startBlock,
+    endBlock,
+    ethers.BigNumber.from(1_000_000_000).mul(100_000_000), //0.1 DAI entry fee
     10_000_000,
     DAIAddress,
     deployer.address,
     wethAddress,
     RewardDistributorAddress,
     PrizeStructureAddress,
-    "v0.0.1t1"
+    "v0.1.1 test4"
   );
   const DeployTxReceipt = await ethers.provider.getTransactionReceipt(TournamentDeployTx.hash);
 
