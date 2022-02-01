@@ -117,8 +117,10 @@ describe("Tournament WithdraWinnings", function() {
     await Tournament.connect(playerWithDai).trade(DAIAddress, wETHAddress, ticketPrice, 1);
     await incrementToEnd(Tournament);
     await Tournament.connect(owner).liquidate([wETHAddress],[0]);
+    const playerWithTicketDai = await Dai.balanceOf(playerWithTicket._address);
     await Tournament.connect(owner).scorePlayers([playerWithTicket._address, playerWithDai.address],[[wETHAddress],[wETHAddress]]);
     expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(false);
+    expect((await Dai.balanceOf(playerWithTicket._address)).gt(playerWithTicketDai)).to.equal(false);
     await Tournament.connect(playerWithTicket).withdrawWinnings(0);
     expect((await Tournament.playerStates(playerWithTicket._address))["hasWithdrawn"]).to.equal(true);
   });
