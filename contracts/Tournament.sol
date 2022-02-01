@@ -41,7 +41,7 @@ contract Tournament {
         uint _startBlock, 
         uint _endBlock, 
         uint _ticketPrice, 
-	uint _apeFee,
+	    uint _apeFee,
         address _ticketTokenAddress,
         address _gameMaster,
         address _tradeTokenAddress,
@@ -52,6 +52,7 @@ contract Tournament {
     ){
         require(block.number < _startBlock, "Startblock lower than deployment block");
         require(_startBlock < _endBlock, "Tournament ends before it starts");
+        require(DECIMALS >= _apeFee);
         startBlock = _startBlock;
         endBlock = _endBlock;
         ticketPrice = _ticketPrice;
@@ -230,7 +231,7 @@ contract Tournament {
     }
 
     function getPrizePool(uint _liquidationAmount) public view returns(uint){
-        return (_liquidationAmount - _liquidationAmount)*DECIMALS/apeFee;
+        return _liquidationAmount - _liquidationAmount*apeFee/DECIMALS;
     }
 
     function isScored() public view returns(bool){
