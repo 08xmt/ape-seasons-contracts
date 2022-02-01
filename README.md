@@ -5,8 +5,8 @@ Contracts still a WIP
 **Token Whitelist address:** 	0xED056bE2b65455Fe27a2B228DdcCBce3BCcD4597  
 **Reward Distributor address:** 	0xc473337DEDeC604e399EF7e200232C41a6400d80  
 **Refund Prize Structure address:** 0xaF69D4fE7ba02C3FeDdDF0fd5d5D5a561Ada64b3  
-**TournamentFactory address:** 	0x026e8caB7C421d755617167791C115521bFdD500
-**Tournament v0.1.1t4 address:**	0xE6911Ddb5eb8dAB9ac2210d6829ca1B985a3BD13  
+**TournamentFactory address:** 	0x501E9051c0D7c450dEA4Dd43Ea4BcBcdc7c414e2  
+**Tournament v0.1.1t4 address:**	0xEBacF57f0Edd9263a9efB421770F9f6B510f0468  
 
 **Whitelisted tokens**
 
