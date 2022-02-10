@@ -22,8 +22,8 @@ async function liquidateTournament(tournamentAddress){
 
   const TournamentFactory = await ethers.getContractFactory("Tournament")
   const tournament = await TournamentFactory.attach(tournamentAddress);
-  const tokenArray = [aaveAddress, curveAddress]; //TODO: Write code for retrieving actual tokens that were bought and sold
-  const minOutArray = [0,0]; //TODO: Calculate a reasonable minOut
+  const tokenArray = [wETHAddress, wbtcAddress]; //TODO: Write code for retrieving actual tokens that were bought and sold
+  const minOutArray = [1,1]; //TODO: Calculate a reasonable minOut
   console.log("Liquidating the following tokens:", tokenArray);
 
   liquidationTx = await tournament.connect(deployer).liquidate(tokenArray, minOutArray);
@@ -36,8 +36,8 @@ async function score(tournamentAddress){
     const [deployer] = await ethers.getSigners();
 
     console.log("Entering scoring function")
-    const sortedPlayers = ["0x10E7530a7374a19c6476CC99E4D9Eb4d8a61E44A","0x19F45EA63B9d9b864aE2eeE603e7B106Df875754"] //TODO: Write function for sorting players
-    const playerTokens = [[DAIAddress, aaveAddress],[DAIAddress, curveAddress]]; //TODO: Write function for getting tokens of players at point of liquidation
+    const sortedPlayers = ["0x19F45EA63B9d9b864aE2eeE603e7B106Df875754","0x10E7530a7374a19c6476CC99E4D9Eb4d8a61E44A","0x4CceA8546b5c48aDdA5390061bf0992af0EE0eB8"] //TODO: Write function for sorting players
+    const playerTokens = [[DAIAddress, wETHAddress],[DAIAddress, aaveAddress, wbtcAddress],[DAIAddress]]; //TODO: Write function for getting tokens of players at point of liquidation
 
     const TournamentFactory = await ethers.getContractFactory("Tournament")
     const tournament = await TournamentFactory.attach(tournamentAddress);
@@ -49,16 +49,13 @@ async function score(tournamentAddress){
 }
 
 async function main() {
-    //await liquidateTournament("tournament address");
-    await score("0x50d2cfC1e0655267e174A1464D0e7Eb83e965E43");
+    const tournamentAddress = "0x035a109811220a847A70558C2bF5AD6d04cb1767"
+    //const liquidateTx = await liquidateTournament(tournamentAddress);
+    const scoreTx = await score(tournamentAddress);
 
 
 
 }
-
-//TODO:2. Calculate scores
-
-//TODO:3. Call scoring function
 
 main()
   .then(() => process.exit(0))

@@ -11,8 +11,8 @@ async function main() {
 
   const TournamentFactoryFactory = await ethers.getContractFactory("TournamentFactory");
   const TournamentFactory = await TournamentFactoryFactory.deploy(
-        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+        "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        "0xED056bE2b65455Fe27a2B228DdcCBce3BCcD4597"
   );
   
   console.log("TournamentFactory address:", TournamentFactory.address);

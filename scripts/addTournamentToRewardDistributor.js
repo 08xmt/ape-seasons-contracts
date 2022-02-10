@@ -12,7 +12,7 @@ async function main() {
   const RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor");
   const RewardDistributor = await RewardDistributorFactory.attach(RewardDistributorAddress);
   const AddTournamentTx = await RewardDistributor.connect(deployer).addTournament(
-      "0xE6911Ddb5eb8dAB9ac2210d6829ca1B985a3BD13",
+      "0x035a109811220a847A70558C2bF5AD6d04cb1767",
       DAIAddress,
       0
   );
