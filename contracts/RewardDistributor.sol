@@ -23,11 +23,11 @@ contract RewardDistributor {
         return IERC20(rewardToken[msg.sender]).transfer(claimer, rewardAmount[msg.sender]);
     }
 
-    function getRewardToken() external view returns(address){
-        return rewardToken[msg.sender];
+    function getRewardToken(address _tournament) external view returns(address){
+        return rewardToken[_tournament];
     }
 
-    function getRewardAmount() external view returns (uint){
-        return rewardAmount[msg.sender];
+    function getRewardAmount(address _tournament) external view returns (uint){
+        return rewardAmount[_tournament];
     }
 }
