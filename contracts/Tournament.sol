@@ -35,7 +35,6 @@ contract Tournament {
     mapping(address => mapping(address => uint)) public playerBalances; //Player address to token address to balance map
     mapping(address => uint) public liquidationRatio; //The ratio at which a specific token was liquidated with 9 decimal accuracy
 
-    mapping(address => bool) public hasBeenCounted;
 
     constructor(
         uint _startBlock, 
@@ -90,7 +89,7 @@ contract Tournament {
         require(playerBalances[msg.sender][tokenIn] >= amountIn, "Insufficient funds");
         require(block.number > startBlock, "Game hasn't started");
         require(block.number < endBlock, "Game has ended");
-        require(tokenWhitelist.isWhitelisted(tokenOut));
+        require(tokenWhitelist.isWhitelisted(tokenOut), "Token not whitelisted");
 
         uint256 amountOut = tradeExact(tokenIn, tokenOut, amountIn, amountOutMin);
 
@@ -114,10 +113,15 @@ contract Tournament {
         require(!isLiquidated(), "Tokens have already been liquidated");
         require(tokens.length == amountOutMin.length, "Liquidation arrays must have same amount of elements");
         for(uint i = 0; i < tokens.length; i++){
-            uint amountIn = IERC20(tokens[i]).balanceOf(address(this));
-            uint amountOut = tradeExact(tokens[i], address(ticketToken), amountIn, amountOutMin[i]);
-            liquidationAmount += amountOut;
-            liquidationRatio[tokens[i]] = amountOut*DECIMALS/amountIn;
+            if(tokens[i] == address(ticketToken)){
+                liquidationAmount += IERC20(tokens[i]).balanceOf(address(this));
+                liquidationRatio[tokens[i]] = DECIMALS;
+            } else {
+                uint amountIn = IERC20(tokens[i]).balanceOf(address(this));
+                uint amountOut = tradeExact(tokens[i], address(ticketToken), amountIn, amountOutMin[i]);
+                liquidationAmount += amountOut;
+                liquidationRatio[tokens[i]] = amountOut*DECIMALS/amountIn;
+            }
         }
     }
 
@@ -161,11 +165,9 @@ contract Tournament {
      *Caculate the score of '_playerAddress' by going through the '_tokens' and tallying up the liquidationRatio
 
     */
-    function calculateScore(address _playerAddress, address[] calldata _tokens) internal view returns(uint){
+    function calculateScore(address _playerAddress, address[] calldata _tokens) public view returns(uint){
         uint score = 0;
         for(uint i = 0; i < _tokens.length; i++){
-            require(!hasBeenCounted[_tokens[i]]); //Make sure mapping is destroyed and rebuilt on each function call
-            hasBeenCounted[_tokens[i]];
             score += liquidationRatio[_tokens[i]]*playerBalances[_playerAddress][_tokens[i]];
         }
         return score/DECIMALS;
@@ -193,8 +195,8 @@ contract Tournament {
             totalScore += score;
         }
         //0.0001% Threshold to account for rounding errors
-        require(liquidationAmount < totalScore*10001/10000, "Score not within threshold");
-        require(liquidationAmount > totalScore*9999/10000, "Score not within threshold");
+        require(liquidationAmount < totalScore*10001/10000, "Score above threshold");
+        require(liquidationAmount > totalScore*9999/10000, "Score below threshold");
         standing = _sortedPlayers;
         emit GameFinalized();
     }
@@ -223,7 +225,7 @@ contract Tournament {
         require(!playerStates[msg.sender].hasClaimed, "Have already claimed");
         playerStates[msg.sender].hasClaimed = true;
         require(rewardDistributor.claim(msg.sender));
-        emit ClaimRewards(msg.sender, rewardDistributor.getRewardToken(), rewardDistributor.getRewardAmount()); 
+        emit ClaimRewards(msg.sender, rewardDistributor.getRewardToken(address(this)), rewardDistributor.getRewardAmount(address(this))); 
     }
 
     function getBalance(address player, address token) public view returns(uint){
