@@ -6,21 +6,25 @@ contract RewardDistributor {
 
     mapping(address => address) rewardToken;
     mapping(address => uint) rewardAmount;
-
-    address owner;
+    mapping(address => bool) owners;
 
     constructor(){
-        owner = msg.sender;
+        owners[msg.sender] = true;
     }
 
     function addTournament(address _tournament, address _rewardToken, uint _rewardAmount) external{
-        require(owner == msg.sender);
+        require(owners[msg.sender]);
         rewardToken[_tournament] = _rewardToken;
         rewardAmount[_tournament] = _rewardAmount;
     }
 
     function claim(address claimer) external returns(bool){
         return IERC20(rewardToken[msg.sender]).transfer(claimer, rewardAmount[msg.sender]);
+    }
+    
+    function addOwner(address newOwner) external {
+        require(owners[msg.sender]);
+        owners[newOwner] = true;
     }
 
     function getRewardToken(address _tournament) external view returns(address){
@@ -30,4 +34,5 @@ contract RewardDistributor {
     function getRewardAmount(address _tournament) external view returns (uint){
         return rewardAmount[_tournament];
     }
+
 }
