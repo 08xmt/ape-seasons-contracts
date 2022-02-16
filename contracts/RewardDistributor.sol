@@ -13,7 +13,7 @@ contract RewardDistributor {
     }
 
     function addTournament(address _tournament, address _rewardToken, uint _rewardAmount) external{
-        require(owners[msg.sender]);
+        require(isOwner(msg.sender));
         rewardToken[_tournament] = _rewardToken;
         rewardAmount[_tournament] = _rewardAmount;
     }
@@ -23,7 +23,7 @@ contract RewardDistributor {
     }
     
     function addOwner(address newOwner) external {
-        require(owners[msg.sender]);
+        require(isOwner(msg.sender));
         owners[newOwner] = true;
     }
 
@@ -33,6 +33,10 @@ contract RewardDistributor {
 
     function getRewardAmount(address _tournament) external view returns (uint){
         return rewardAmount[_tournament];
+    }
+
+    function isOwner(address owner) public view returns(bool){
+        return owners[owner];
     }
 
 }
