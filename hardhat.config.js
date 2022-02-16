@@ -52,7 +52,7 @@ module.exports = {
       accounts: [GOERLI_PRIVATE_KEY]
     },
     matic: {
-      url: "https://rpc-mainnet.maticvigil.com",
+      url: "https://polygon-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
       accounts: [GOERLI_PRIVATE_KEY]
     }
   }
