@@ -228,6 +228,13 @@ contract Tournament {
         emit ClaimRewards(msg.sender, rewardDistributor.getRewardToken(address(this)), rewardDistributor.getRewardAmount(address(this))); 
     }
 
+    //TODO: Update with hardcoded treasury
+    function claimApeFee(address treasury) public {
+        require(msg.sender == gameMaster);
+        require(isLiquidated());
+        ticketToken.transfer(treasury, liquidationAmount*apeFee/DECIMALS);
+    }
+
     function getBalance(address player, address token) public view returns(uint){
         return playerBalances[player][token];
     }
