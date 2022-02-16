@@ -3,41 +3,6 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_startBlock",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_endBlock",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_ticketPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_apeFee",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_ticketTokenAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_gameMaster",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_tradeTokenAddress",
-          "type": "address"
-        },
-        {
           "internalType": "address",
           "name": "_sushiRouterAddress",
           "type": "address"
@@ -51,53 +16,10 @@
           "internalType": "address",
           "name": "_rewardDistributor",
           "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_prizeStructureAddress",
-          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        }
-      ],
-      "name": "BuyTicket",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "rewardAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "ClaimRewards",
-      "type": "event"
     },
     {
       "anonymous": false,
@@ -119,89 +41,63 @@
           "internalType": "uint256",
           "name": "ticketPrice",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "rewardAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "ticketToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "rewardToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "tournamentAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
         }
       ],
-      "name": "Deploy",
+      "name": "CreateTournament",
       "type": "event"
     },
     {
-      "anonymous": false,
-      "inputs": [],
-      "name": "GameFinalized",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
           "internalType": "address",
-          "name": "player",
+          "name": "newOwner",
           "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amountFrom",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amountTo",
-          "type": "uint256"
         }
       ],
-      "name": "Trade",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "winnings",
-          "type": "uint256"
-        }
-      ],
-      "name": "WithdrawWinnings",
-      "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "apeFee",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "changeOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "buyTicket",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newSushiRouterAddress",
+          "type": "address"
+        }
+      ],
+      "name": "changeSushiRouterAddress",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -210,76 +106,64 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "playerPosition",
+          "name": "_startBlock",
           "type": "uint256"
-        }
-      ],
-      "name": "calculateEarnings",
-      "outputs": [
+        },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "_endBlock",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
+        },
+        {
+          "internalType": "uint256",
+          "name": "_ticketPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_apeFee",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rewardAmount",
+          "type": "uint256"
+        },
         {
           "internalType": "address",
-          "name": "_playerAddress",
+          "name": "_ticketToken",
           "type": "address"
         },
         {
-          "internalType": "address[]",
-          "name": "_tokens",
-          "type": "address[]"
-        }
-      ],
-      "name": "calculateScore",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
+          "internalType": "address",
+          "name": "_tradeTokenAddress",
+          "type": "address"
+        },
         {
           "internalType": "address",
-          "name": "_newGamemaster",
+          "name": "_rewardToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_prizeStructure",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "name": "createTournament",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
           "type": "address"
         }
       ],
-      "name": "changeGamemaster",
-      "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "claimRewards",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "endBlock",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -296,196 +180,11 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
-        }
-      ],
-      "name": "getBalance",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_liquidationAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "getPrizePool",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [],
-      "name": "isLiquidated",
+      "name": "owner",
       "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isScored",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address[]",
-          "name": "tokens",
-          "type": "address[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "amountOutMin",
-          "type": "uint256[]"
-        }
-      ],
-      "name": "liquidate",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "liquidationAmount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
         {
           "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "liquidationRatio",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "playerBalances",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "playerCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "playerStates",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "hasTicket",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "hasWithdrawn",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "hasClaimed",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "prizeStructure",
-      "outputs": [
-        {
-          "internalType": "contract IPrizeStructure",
           "name": "",
           "type": "address"
         }
@@ -498,43 +197,6 @@
       "name": "rewardDistributor",
       "outputs": [
         {
-          "internalType": "contract RewardDistributor",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address[]",
-          "name": "_sortedPlayers",
-          "type": "address[]"
-        },
-        {
-          "internalType": "address[][]",
-          "name": "_playerTokens",
-          "type": "address[][]"
-        }
-      ],
-      "name": "scorePlayers",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "standing",
-      "outputs": [
-        {
           "internalType": "address",
           "name": "",
           "type": "address"
@@ -545,49 +207,10 @@
     },
     {
       "inputs": [],
-      "name": "startBlock",
+      "name": "sushiRouterAddress",
       "outputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "sushiRouter",
-      "outputs": [
-        {
-          "internalType": "contract IUniswapV2Router01",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "ticketPrice",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "ticketToken",
-      "outputs": [
-        {
-          "internalType": "contract IERC20",
+          "internalType": "address",
           "name": "",
           "type": "address"
         }
@@ -600,78 +223,12 @@
       "name": "tokenWhitelist",
       "outputs": [
         {
-          "internalType": "contract TokenWhitelist",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenIn",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "tokenOut",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amountIn",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amountOutMin",
-          "type": "uint256"
-        }
-      ],
-      "name": "trade",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "tradeTokenAddress",
-      "outputs": [
-        {
           "internalType": "address",
           "name": "",
           "type": "address"
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "playerPos",
-          "type": "uint256"
-        }
-      ],
-      "name": "withdrawWinnings",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
       "type": "function"
     }
   ]
