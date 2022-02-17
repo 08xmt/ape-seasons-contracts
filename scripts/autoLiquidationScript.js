@@ -5,7 +5,7 @@
   const linkAddress = "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39";
   const aaveAddress = "0xd6df932a45c0f255f85145f286ea0b292b21c90b";
   const curveAddress = "0x172370d5cd63279efa6d502dab29171933a610af";
-
+  const whitelistedTokens = [wETHAddress, DAIAddress, maticAddress, wbtcAddress, linkAddress, aaveAddress, curveAddress] //TODO: Automatically fetch newly whitelisted tokens
  
 
 //TODO:1. Call liquidation function
@@ -22,7 +22,12 @@ async function liquidateTournament(tournamentAddress){
 
   const TournamentFactory = await ethers.getContractFactory("Tournament")
   const tournament = await TournamentFactory.attach(tournamentAddress);
-  const whitelistedTokens = [wETHAddress, DAIAddress, maticAddress, wbtcAddress, linkAddress, aaveAddress, curveAddress] //TODO: Automatically fetch newly whitelisted tokens
+  const isLiquidated  = await tournament.isLiquidated();
+  console.log("Tournament is liquidated:", isLiquidated);
+  if(isLiquidated){
+    return;
+  }
+
   //1. Get a list of whitelisted tokens owned by tournament contract:
   var ownedTokenList = []
   for(const tokenAddress of whitelistedTokens){
@@ -55,28 +60,47 @@ async function score(tournamentAddress){
  
     console.log("Entering scoring function")
     //1. Get players
-    const tradeFilter = tournament.filters.GameFinalized()
-    const events = await tournament.queryFilter(tradeFilter); 
-    console.log(events)
-    //const players =
+    const tradeFilter = tournament.filters.BuyTicket()
+    const events = await tournament.queryFilter(tradeFilter);
+    var playerScores = []
+    var playerTokens = {}
+    for(const e of events){
+        const player = e.args[0]
+        playerTokens[player] = [DAIAddress] //TODO: Automatically pick the right ticket token
+        for(const tokenAddress of whitelistedTokens){
+            const balance = await tournament.getBalance(player, tokenAddress)
+            if(balance.gt(0)){
+                playerTokens[player].push(tokenAddress)
+            }
+        }
+        playerScores.push([player, await tournament.calculateScore(player, playerTokens[player])])
+    }
+    console.log("Player scores:", playerScores)
+    console.log("Player tokens:", playerTokens)
     
     //2. Sort players by liquidated value
-    const sortedPlayers = ["0x19F45EA63B9d9b864aE2eeE603e7B106Df875754","0x10E7530a7374a19c6476CC99E4D9Eb4d8a61E44A","0x4CceA8546b5c48aDdA5390061bf0992af0EE0eB8"] //TODO: Write function for sorting players
-    const playerTokens = [[DAIAddress, wETHAddress],[DAIAddress, aaveAddress, wbtcAddress],[DAIAddress]]; //TODO: Write function for getting tokens of players at point of liquidation
+    playerScores.sort(function(a,b) {
+        if(a[1].gt(b[1])){
+            return 1
+        } else {
+            return -1
+        }
+    })
+
+    var sortedPlayers = playerScores.map((playerArray) => playerArray[0])
+    var sortedPlayerTokens = playerScores.map((playerArray) => playerTokens[playerArray[0]])
    
     console.log("Scoring the following players:", sortedPlayers);
+    console.log("With the following tokens:", sortedPlayerTokens);
   
-    scoreTx = await tournament.connect(deployer).scorePlayers(sortedPlayers, playerTokens);
+    scoreTx = await tournament.connect(deployer).scorePlayers(sortedPlayers, sortedPlayerTokens);
     console.log(await scoreTx.wait())
 }
 
 async function main() {
-    const tournamentAddress = "0x035a109811220a847A70558C2bF5AD6d04cb1767"
-    //const liquidateTx = await liquidateTournament(tournamentAddress);
+    const tournamentAddress = "0x3Ca55DD1D768D6B26E0c66B9e6A227eCE76310c3"
+    const liquidateTx = await liquidateTournament(tournamentAddress);
     const scoreTx = await score(tournamentAddress);
-
-
-
 }
 
 main()
