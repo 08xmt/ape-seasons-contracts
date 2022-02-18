@@ -17,9 +17,8 @@ async function main(){
     deployer.address
   );
   
-  console.log("Buying ticket");
 
-  const tournamentAddress = "0x06D0280ae6BEAbb4E02756EA19F2053ADEE459C1"
+  const tournamentAddress = "0xb2EF2b651EAF3C0c6A5966d9Ae502E7C86cec87e"
   
   const dai = await ethers.getContractAt("ERC20", DAIAddress)
   const TournamentFactory = await ethers.getContractFactory("Tournament")

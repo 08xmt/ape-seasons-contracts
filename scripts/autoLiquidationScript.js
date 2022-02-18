@@ -98,7 +98,7 @@ async function score(tournamentAddress){
 }
 
 async function main() {
-    const tournamentAddress = "0x3Ca55DD1D768D6B26E0c66B9e6A227eCE76310c3"
+    const tournamentAddress = "0xb2EF2b651EAF3C0c6A5966d9Ae502E7C86cec87e"
     const liquidateTx = await liquidateTournament(tournamentAddress);
     const scoreTx = await score(tournamentAddress);
 }

@@ -20,11 +20,11 @@ async function main() {
   const WhitelistAddress = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
   const WhitelistFactory = await ethers.getContractFactory("TokenWhitelist");
   const Whitelist = WhitelistFactory.attach(WhitelistAddress)
-  var tx = await Whitelist.connect(deployer).addToken(maticAddress)
+  var tx = await Whitelist.connect(deployer).addToken(aaveAddress)
   console.log("Tx Receipt:", tx);
-  tx = await Whitelist.connect(deployer).addToken(wETHAddress)
+  tx = await Whitelist.connect(deployer).addToken(curveAddress)
   console.log("Tx Receipt:", tx);
-  tx = await Whitelist.connect(deployer).addToken(DAIAddress)
+  tx = await Whitelist.connect(deployer).addToken(wbtcAddress)
   console.log("Tx Receipt:", tx);
   //console.log(ethers.getContract("TournamentFactory"));
   //const iface = new ethers.utils.Interface(TournamentFactory.abi);

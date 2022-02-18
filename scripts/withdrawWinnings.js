@@ -13,22 +13,30 @@ async function main(){
   const [deployer] = await ethers.getSigners();
 
   console.log(
-    "Buying ticket with account:",
+    "Withdrawing winnings with::",
     deployer.address
   );
   
-  console.log("Buying ticket");
+  console.log("Withdrawing winnings");
 
   const tournamentAddress = "0xb2EF2b651EAF3C0c6A5966d9Ae502E7C86cec87e"
+  const rewardDistributorAddress = "0x2c7C6794DcE158359407D30a94B64839eCA0b185"
   
   const dai = await ethers.getContractAt("ERC20", DAIAddress)
   const TournamentFactory = await ethers.getContractFactory("Tournament")
+  const RewardDistributorFactory = await ethers.getContractFactory("RewardDistributor")
+  const rewardDistributor = await RewardDistributorFactory.attach(rewardDistributorAddress)
   const tournament = await TournamentFactory.attach(tournamentAddress);
-
-  approveTx = await dai.connect(deployer).approve(tournamentAddress, ethers.BigNumber.from(1000).pow(9));
-  console.log(await approveTx.wait())
-  buyTx = await tournament.connect(deployer).buyTicket();
-  console.log(await buyTx.wait())
+    
+  console.log("Claiming rewards")
+  console.log("Reward token:", await rewardDistributor.getRewardToken(tournamentAddress))
+  console.log("Reward amount:", await rewardDistributor.getRewardAmount(tournamentAddress))
+  claimTx = await tournament.connect(deployer).claimRewards()
+  console.log(await claimTx.wait())
+  console.log("Is scored:", await tournament.isScored())
+  console.log("Earnings:", await tournament.calculateEarnings(0))
+  withdrawTx = await tournament.connect(deployer).withdrawWinnings(0);
+  console.log(await withdrawTx.wait())
 }
 
 main()

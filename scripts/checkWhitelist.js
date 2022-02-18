@@ -18,7 +18,7 @@ async function main() {
   const curveAddress = "0x172370d5cd63279efa6d502dab29171933a610af";
 
   const tournamentFactoryFactory = await ethers.getContractFactory("TournamentFactory")  
-  const tournamentFactory = await tournamentFactoryFactory.attach("0x501E9051c0D7c450dEA4Dd43Ea4BcBcdc7c414e2");
+  const tournamentFactory = await tournamentFactoryFactory.attach("0xBA71a2408F35C782908A558e3C8Dd18D20d9fbdA");
   const tournamentContractFactory = await ethers.getContractFactory("Tournament")
   const tournament = await tournamentContractFactory.attach("0xEBacF57f0Edd9263a9efB421770F9f6B510f0468")
     
