@@ -8,53 +8,55 @@
   const whitelistedTokens = [wETHAddress, DAIAddress, maticAddress, wbtcAddress, linkAddress, aaveAddress, curveAddress] //TODO: Automatically fetch newly whitelisted tokens
  
 
-//TODO:1. Call liquidation function
-async function liquidateTournament(tournamentAddress){
+async function liquidateTournament(tournamentAddress, signer){
 
-  const [deployer] = await ethers.getSigners();
+    //const [deployer] = await ethers.getSigners();
+    const deployer = signer;
 
-  console.log(
-    "Deployer:",
-    deployer.address
-  );
-  
-  console.log("Entering liquidation function");
+    console.log(
+        "Deployer:",
+        deployer.address
+    );
 
-  const TournamentFactory = await ethers.getContractFactory("Tournament")
-  const tournament = await TournamentFactory.attach(tournamentAddress);
-  const isLiquidated  = await tournament.isLiquidated();
-  console.log("Tournament is liquidated:", isLiquidated);
-  if(isLiquidated){
-    return;
-  }
+    console.log("Entering liquidation function");
 
-  //1. Get a list of whitelisted tokens owned by tournament contract:
-  var ownedTokenList = []
-  for(const tokenAddress of whitelistedTokens){
-    console.log("Fetching token at:", tokenAddress)
-    token = await ethers.getContractAt("IERC20", tokenAddress);
-    const amountOwned = await token.balanceOf(tournamentAddress);
-    console.log("Token balance:", amountOwned);
-    if(amountOwned.gt(0)){
-        ownedTokenList.push(tokenAddress);
+    const TournamentFactory = await ethers.getContractFactory("Tournament")
+    const tournament = await TournamentFactory.attach(tournamentAddress);
+    const isLiquidated  = await tournament.isLiquidated();
+    console.log("Tournament is liquidated:", isLiquidated);
+    if(isLiquidated){
+        return;
     }
-  }
 
-  //2. Create array of minimum payouts
-  //TODO: Calculate a reasonable minOut
-  const minOutArray = new Array(ownedTokenList.length).fill(1);
-  console.log(minOutArray)
-  console.log("Liquidating the following tokens:", ownedTokenList);
+    //1. Get a list of whitelisted tokens owned by tournament contract:
+    var ownedTokenList = []
+    for(const tokenAddress of whitelistedTokens){
+        console.log("Fetching token at:", tokenAddress)
+        token = await ethers.getContractAt("IERC20", tokenAddress);
+        const amountOwned = await token.balanceOf(tournamentAddress);
+        console.log("Token balance:", amountOwned);
+        if(amountOwned.gt(0)){
+            ownedTokenList.push(tokenAddress);
+        }
+    }
 
-  liquidationTx = await tournament.connect(deployer).liquidate(ownedTokenList, minOutArray);
+    //2. Create array of minimum payouts
+    //TODO: Calculate a reasonable minOut
+    const minOutArray = new Array(ownedTokenList.length).fill(1);
+    console.log(minOutArray)
+    console.log("Liquidating the following tokens:", ownedTokenList);
 
-  console.log(await liquidationTx.wait())
+    liquidationTx = await tournament.connect(deployer).liquidate(ownedTokenList, minOutArray);
+
+    console.log(await liquidationTx.wait())
 }
 
 //Should always be called after the liquidation function
-async function score(tournamentAddress){
+async function score(tournamentAddress, signer){
 
-    const [deployer] = await ethers.getSigners();
+    
+    //const [deployer] = await ethers.getSigners();
+    deployer = signer;
     const TournamentFactory = await ethers.getContractFactory("Tournament")
     const tournament = await TournamentFactory.attach(tournamentAddress);
  
@@ -66,7 +68,7 @@ async function score(tournamentAddress){
     var playerTokens = {}
     for(const e of events){
         const player = e.args[0]
-        playerTokens[player] = [DAIAddress] //TODO: Automatically pick the right ticket token
+        playerTokens[player] = [await tournament.ticketToken()]
         for(const tokenAddress of whitelistedTokens){
             const balance = await tournament.getBalance(player, tokenAddress)
             if(balance.gt(0)){
@@ -97,10 +99,9 @@ async function score(tournamentAddress){
     console.log(await scoreTx.wait())
 }
 
-async function main() {
-    const tournamentAddress = "0xb2EF2b651EAF3C0c6A5966d9Ae502E7C86cec87e"
-    const liquidateTx = await liquidateTournament(tournamentAddress);
-    const scoreTx = await score(tournamentAddress);
+async function main(tournamentAddress, signer) {
+    const liquidateTx = await liquidateTournament(tournamentAddress, signer);
+    const scoreTx = await score(tournamentAddress, signer);
 }
 
 main()
